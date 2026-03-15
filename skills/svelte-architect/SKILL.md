@@ -1,209 +1,171 @@
 ---
 name: svelte-architect
-description: Svelte 5 production architecture guide covering runes-based reactivity, component API design, SvelteKit integration, TypeScript patterns, and design systems. Use when building Svelte 5 apps or component libraries, creating components, setting up project architecture, implementing state management, designing component APIs, working with SvelteKit routing and data fetching, integrating backend APIs with type safety, or reviewing Svelte code. Triggers on any Svelte 5 (.svelte, .svelte.ts), SvelteKit, or Tailwind + Svelte task.
+description: >
+  Architecture planning and review for Svelte 5 + SvelteKit applications. Use when deciding
+  the app's route/layout structure, state and data boundaries, design system scope,
+  dependency choices, migration strategy, or how a new feature should fit the existing
+  system. Trigger on greenfield setup, structural review, architectural debt analysis,
+  feature integration planning, or stack standardization. Do not use for file-level code
+  changes, component implementation, or route/action authoring; use svelte-engineer for that.
 ---
 
-# Svelte 5 Master Architect
+# Svelte 5 Architect
 
-## Motivation
+Decide the shape of the system. Do not drift into file-level implementation.
 
-These patterns are distilled from runed, shadcn-svelte, svelte.dev, hono-svelte-5, and skeleton v3. Svelte 5 replaces stores, event dispatchers, slots, and `$:` with runes and snippets — a unified reactivity model that works identically inside and outside components. Class-based `.svelte.ts` modules replace writable/derived stores with direct property access. Components expose barrel files with named exports for clean, tree-shakeable imports. Callback props replace event dispatchers for type-safe parent-child communication. The `data-slot` convention and `tailwind-variants` provide a scalable design system layer. All code follows snake_case naming for variables/functions, descriptive names (no single-letter abbreviations), and named imports exclusively.
+## What this skill owns
 
-## Absolute Rules
+This skill is responsible for:
 
-1. **NEVER** use `export let` — use `$props()` exclusively
-2. **NEVER** use `createEventDispatcher` — use callback props (`on_action`)
-3. **NEVER** use `svelte/store` (`writable`, `readable`, `derived`) — use runes or class-based stores in `.svelte.ts`
-4. **NEVER** use `<slot>` — use `{@render children?.()}` with Snippet types
-5. **NEVER** use `$:` reactive declarations — use `$derived` or `$derived.by()`
-6. **NEVER** use default exports/imports for components — use named exports via barrel files
-7. **ALWAYS** use `.svelte.ts` extension (not `.ts`) for files containing runes
-8. **ALWAYS** prefer `$derived` over `$effect` — `$effect` is for side effects only
-9. **ALWAYS** spread `...rest_props` on the root element for prop delegation
-10. **ALWAYS** use `ref = $bindable(null)` as the first destructured prop
-11. **ALWAYS** rename `class` to `class_name`: `class: class_name`
-12. **ALWAYS** expose components from their directory via barrel `index.ts` with named exports
-13. **ALWAYS** use snake_case for variables, functions, and method names
-14. **ALWAYS** use descriptive names — no single-letter loop/lambda variables (`index` not `i`), no single-letter generics (`DataType` not `T`)
-15. **ALWAYS** sort imports alphabetically by module path
-16. **ALWAYS** use early-return guard clauses (`if (!x) return`) over wrapping function bodies in conditional blocks
-17. **ALWAYS** use concise expressions — arrow syntax without braces for single-expression functions, inline trivial intermediate variables
-18. **ALWAYS** use `cn()` for all class composition — never interpolate classes via template strings
-19. **ALWAYS** prefer data-driven rendering (typed config + iteration) over repeated markup with per-item conditionals
-20. **NEVER** use inline type assertions (`as const`, `as Type`) when proper types can be extracted from library signatures
+- route, layout, and feature boundaries
+- data ownership and state placement decisions
+- design system scope and library choices
+- greenfield project defaults
+- architectural reviews and migrations
+- feature completeness, UX coverage, and extensibility tradeoffs
 
-## Decision Trees
+This skill is not responsible for:
 
-### Where to Put Logic
+- writing `.svelte`, `.svelte.ts`, `+page.svelte`, or `+page.server.ts`
+- defining exact prop, callback, snippet, or barrel-file APIs
+- deciding how one large component should be split across concrete files
+- giving code snippets unless a tiny example is unavoidable to explain a boundary
 
-```
-Uses $state, $derived, or $effect?
-├── YES → .svelte.ts file
-│   ├── Utility/primitive → Class with #private $state + public getters
-│   ├── Page-specific logic → Colocated page.svelte.ts handler class
-│   └── Global state → Module-level singleton class export
-└── NO → Plain .ts file
-```
+If the request becomes file-level, hand off to [svelte-engineer](../svelte-engineer/SKILL.md).
 
-### State Management
+## Routing order
 
-```
-What kind of state?
-├── Component-local → $state inside <script>
-├── Derived/computed → $derived or $derived.by()
-├── Parent-child shared → $bindable() props + bind:value
-├── Component tree shared → Context API (setContext/getContext)
-├── Global app state → Class with $state in .svelte.ts singleton
-└── URL state → SvelteKit load functions
-```
+- New app or new product area -> read [greenfield-setup](references/greenfield-setup.md)
+- Existing app review, refactor, or migration -> read [architecture-review](references/architecture-review.md)
+- Mixed task -> read the review first to understand constraints, then the greenfield guide to define the target state
+- Once the architecture is decided, produce the structured handoff below, then stop and let the engineer implement
 
-### Component vs Utility
+## Default architectural baseline
 
-```
-Renders DOM?
-├── YES → .svelte component
-│   ├── Wrapping primitive → Extend primitive props + styling
-│   ├── Compound → Barrel file with named Root + Parts exports
-│   └── Simple element → Extend HTMLAttributes
-└── NO → .svelte.ts reactive utility
-    ├── Stateful object → Class with $state + get accessors
-    └── Imperative setup → Function with use_* or on_* prefix
-```
+Start here unless the task supplies a stronger constraint.
 
-## Core Patterns
+| Concern | Default decision | Escalate only when |
+| --- | --- | --- |
+| App shells | Use top-level route groups by shell or access boundary, usually `(marketing)` + `(app)`; add `(auth)` only if auth screens need a separate shell | You have multiple products, tenants, or admin surfaces |
+| Data reads | Prefer `+page.server.ts` / `+layout.server.ts` so the server stays the source of truth | The feature is browser-only or requires live client polling/subscriptions |
+| Mutations | Prefer SvelteKit form actions for app-owned forms and CRUD | The endpoint is consumed externally or is not page-owned |
+| UI state | Keep it local to the page or component that owns the interaction | Multiple distant consumers truly need the same live state |
+| Shared subtree state | Use Context at the compound/root boundary | The state must survive route changes or exist outside one subtree |
+| Global shared state | Reserve singletons for auth/session, theme, feature flags, and rare long-lived client workflows | The state is just page data or a short-lived interaction |
+| Styling stack | Tailwind CSS v4 + design tokens + `tailwind-variants` | The organization has a mandated styling system |
+| Headless behavior | `bits-ui` for accessible primitives, styled in-house | The needed primitive does not exist or a dependency ban applies |
+| Validation | Shared Zod schemas at form, route, and API boundaries | Another schema system is already mandated across the stack |
+| API typing | Prefer one typed boundary between frontend and backend, such as Hono `hc` or generated clients | The backend stack cannot expose typed contracts |
 
-### Component Blueprint
+## Architecture decision rules
 
-```svelte
-<script lang="ts" module>
-  import { tv, type VariantProps } from 'tailwind-variants';
+### 1. Organize by ownership, not by convenience
 
-  export const card_variants = tv({
-    base: 'inline-flex items-center',
-    variants: {
-      variant: { default: 'bg-primary', destructive: 'bg-destructive' },
-      size: { sm: 'h-8 px-3', md: 'h-9 px-4', lg: 'h-10 px-6' },
-    },
-    defaultVariants: { variant: 'default', size: 'md' },
-  });
+- Group routes by shell, navigation, and access control, not by an arbitrary feature taxonomy.
+- Keep domain UI close to the feature it serves. Avoid a generic `shared/` dumping ground.
+- Keep design-system primitives separate from feature components. If a primitive needs business logic, it is no longer a primitive.
 
-  export type CardVariant = VariantProps<typeof card_variants>['variant'];
-</script>
+### 2. Keep server-owned data on the server by default
 
-<script lang="ts">
-  import type { HTMLAttributes } from 'svelte/elements';
-  import type { Snippet } from 'svelte';
-  import { cn } from '$lib/utils.js';
+Use the server as the source of truth for entity data, authorization, and validation unless the product truly needs a richer client model.
 
-  let {
-    ref = $bindable(null),
-    class: class_name,
-    variant = 'default',
-    size = 'md',
-    children,
-    ...rest_props
-  }: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-    variant?: CardVariant;
-    size?: 'sm' | 'md' | 'lg';
-    children?: Snippet;
-  } = $props();
-</script>
+Good default:
 
-<div
-  bind:this={ref}
-  data-slot="card"
-  class={cn(card_variants({ variant, size }), class_name)}
-  {...rest_props}
->
-  {@render children?.()}
-</div>
-```
+- reads in `+page.server.ts` or `+layout.server.ts`
+- writes through actions
+- client invalidation or progressive enhancement after writes
 
-### Barrel File (Named Exports)
+Escalate to a richer client-side state layer only for:
 
-```ts
-// components/ui/card/index.ts
-export { Card } from './card.svelte';
-export { card_variants, type CardVariant } from './card.svelte';
-```
+- real-time collaboration
+- local-first or offline flows
+- long-running optimistic workflows
+- browser APIs that cannot be mediated through normal page actions
 
-### Compound Component Barrel
+### 3. Make state scope explicit
 
-```ts
-// components/ui/dialog/index.ts
-export { DialogRoot as Dialog } from './dialog-root.svelte';
-export { DialogContent } from './dialog-content.svelte';
-export { DialogTrigger } from './dialog-trigger.svelte';
-export { DialogOverlay } from './dialog-overlay.svelte';
-```
+Use this ordering unless there is evidence otherwise:
 
-### Reactive Utility (Class-Based)
+1. component-local state
+2. page-local state
+3. subtree Context
+4. route-shared layout state
+5. global singleton
 
-```ts
-// media-query.svelte.ts
-export class MediaQuery {
-  #is_matching: boolean = $state(false);
+If a proposal jumps straight to global state, justify why the lower scopes fail.
 
-  constructor(query_string: MaybeGetter<string>) {
-    $effect(() => {
-      const media_query_list = window.matchMedia(extract(query_string));
-      this.#is_matching = media_query_list.matches;
-      const handle_change = (event: MediaQueryListEvent) => {
-        this.#is_matching = event.matches;
-      };
-      media_query_list.addEventListener('change', handle_change);
-      return () => media_query_list.removeEventListener('change', handle_change);
-    });
-  }
+### 4. Design the UI as layers
 
-  get current(): boolean { return this.#is_matching; }
-}
-```
+Default layering:
 
-### Context Pattern
+1. design tokens
+2. `ui/` primitives
+3. feature components
+4. route pages/layouts
 
-```ts
-// context.svelte.ts
-import { getContext, setContext } from 'svelte';
+Avoid collapsing these layers together. A page should not become the design system, and a primitive should not become the feature.
 
-const CONTEXT_KEY = Symbol('dialog-context');
+### 5. Architect for complete user journeys
 
-class DialogState {
-  readonly props: { get_open: () => boolean; set_open: (value: boolean) => void };
-  is_open = $derived.by(() => this.props.get_open());
+Every feature plan should cover, at minimum:
 
-  constructor(props: typeof DialogState.prototype.props) {
-    this.props = props;
-  }
-}
+- loading state
+- empty state
+- expected error state
+- unauthorized or unavailable state
+- success confirmation or post-submit transition
+- responsive/mobile behavior
+- accessibility implications
 
-export function set_dialog_context(props: ConstructorParameters<typeof DialogState>[0]) {
-  return setContext(CONTEXT_KEY, new DialogState(props));
-}
+If the architecture makes these states awkward to place, the structure is probably wrong.
 
-export function use_dialog_context(): DialogState {
-  return getContext<DialogState>(CONTEXT_KEY);
-}
-```
+### 6. Prefer the smallest durable abstraction
 
-### Global Store
+Default to a small number of obvious architectural seams:
 
-```ts
-// stores/user.svelte.ts
-class UserStore {
-  current_user = $state<User | null>(null);
-  is_logged_in = $derived(this.current_user !== null);
-  set_user(user: User | null) { this.current_user = user; }
-}
+- route groups for shells and access control
+- a feature directory per domain or product area
+- one design-system layer
+- one data-boundary strategy
 
-export const user_store = new UserStore();
-```
+Avoid adding extra abstraction layers "just in case." New layers need a clear ownership problem to solve.
 
-## References
+## Concrete deliverables
 
-- [Project structure](references/project-structure.md)
-- [Component patterns](references/component-patterns.md)
-- [State & reactivity](references/state-reactivity.md)
-- [SvelteKit patterns](references/sveltekit-patterns.md)
-- [TypeScript patterns](references/typescript-patterns.md)
-- [Anti-patterns](references/anti-patterns.md)
+Do not return a vague essay. Make decisions.
+
+Use this response structure:
+
+1. **Architecture summary** - the recommended direction in a few sentences
+2. **Chosen defaults** - the concrete defaults being adopted for routes, data, state, styling, validation, and API boundaries
+3. **Structure map** - route groups, layout boundaries, feature areas, and shared layers; be specific enough to place work (for example, `routes/(app)/dashboard`, `routes/(app)/settings`, `routes/(marketing)/pricing`), but stop short of naming concrete implementation files
+4. **State and data ownership** - what lives locally, in Context, on the server, or globally
+5. **UX coverage** - where loading, error, empty, auth, and success states belong
+6. **Risks and rejected alternatives** - the main tradeoffs and what was intentionally not chosen
+7. **Implementation handoff** - what the engineer should now build, in what order, and under which constraints
+
+Keep each section short, decisive, and implementation-ready. The handoff should be structured, not essay-like.
+
+## Architectural red flags
+
+Treat these as meaningful problems, not style nits:
+
+- more than one state pattern for the same scope
+- page CRUD data moved into global state without a strong reason
+- feature code scattered across unrelated shared folders
+- design-system primitives carrying domain logic
+- route groups mirroring product domains instead of shells or access boundaries
+- custom client fetching used where load/actions would be simpler and safer
+- every new feature requiring a new abstraction before any real repetition exists
+- architecture advice that never commits to an actual default
+
+## Handoff to the engineer
+
+Stop once the architectural decisions are concrete enough to implement. Pass the engineer:
+
+- the chosen route/layout map
+- allowed state scopes for the feature
+- the data-loading and mutation boundary
+- required UX states
+- approved libraries and conventions
+- any migration sequencing or constraints
