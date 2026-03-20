@@ -1,4 +1,4 @@
-# Domain — Error handling
+# Domain - Error handling
 
 ## Use when
 
@@ -6,14 +6,27 @@ Inputs can be wrong, dependencies can fail, state can drift, or users need a pat
 
 ## Route next
 
-- [security.md](security.md) — if failure can cause real harm
-- [observability.md](observability.md) — to expose actionable signals and breadcrumbs
-- [correctness.md](correctness.md) — to prove failure handling behaves as intended
+- [security.md](security.md) if failure can cause real harm
+- [observability.md](observability.md) to expose actionable signals and breadcrumbs
+- [correctness.md](correctness.md) to prove failure handling behaves as intended
 
-## Questions
+## Apply
 
-- How should failure look to the person experiencing it? (e.g., explicit cause, next step, no technical jargon, no blame)
-- What can fail silently today, and how will you stop that? (e.g., dropped write, swallowed exception, stale cache, ignored error return)
-- What recovery options should exist after each likely failure? (e.g., retry, undo, draft preserved, support trail, graceful fallback)
-- Which errors should fail fast, and which should degrade gracefully? (e.g., invalid auth fails fast, optional analytics degrades, flaky dependency retries)
-- Does the system recover automatically from transient failures? (e.g., circuit breakers, exponential backoff, state reconciliation, reconnection)
+- Classify failures: invalid input, permission, not found, transient dependency, concurrency, internal bug.
+- Fail closed for unsafe operations and fail loudly for invariant violations.
+- Preserve recoverability when possible: retry, resume, draft, idempotency, or clear next action.
+- Never swallow errors or return success-shaped lies.
+- Keep user-facing messages actionable without leaking sensitive internals.
+
+## Resolve explicitly
+
+- Which failures should block, retry, degrade, or crash?
+- What state must survive a failure?
+- What should the user or operator do next?
+- What errors must be surfaced immediately?
+
+## Minimum proof
+
+- Representative failure-path tests
+- Explicit error propagation instead of silent fallback
+- Signals sufficient to diagnose the failure class

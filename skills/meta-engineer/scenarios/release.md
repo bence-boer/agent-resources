@@ -1,4 +1,4 @@
-# Scenario — Release
+# Scenario - Release
 
 ## Use when
 
@@ -6,15 +6,28 @@ The task changes deployment, rollout, migrations, environment, operations, or re
 
 ## Route next
 
-- [../domains/observability.md](../domains/observability.md) — to define fast signals and operational breadcrumbs
-- [../domains/reliability.md](../domains/reliability.md) — to survive partial and failed deployments
-- [../domains/completeness.md](../domains/completeness.md) — to include backups, cleanup, docs, and validation steps
-- [../domains/security.md](../domains/security.md) — to protect the release path itself
-- [../domains/testing.md](../domains/testing.md) — to verify the release mechanics, not just the code
+- [../domains/observability.md](../domains/observability.md) to define fast signals and operational breadcrumbs
+- [../domains/reliability.md](../domains/reliability.md) to survive partial and failed deployments
+- [../domains/completeness.md](../domains/completeness.md) to include backups, cleanup, docs, and validation steps
+- [../domains/security.md](../domains/security.md) to protect the release path itself
+- [../domains/testing.md](../domains/testing.md) to verify the release mechanics, not just the code
 
-## Questions
+## Default posture
 
-- What has to happen before, during, and after release for this to be safe? (e.g., backup, migration, smoke test, health check)
-- What partial-release states are possible, and are they acceptable? (e.g., old client and new server, data mid-backfill, cache stale)
-- How will you detect problems quickly after release? (e.g., health check, dashboard, support signal, error rate spike)
-- What rollback or repair path exists if the first release goes badly? (e.g., revert, disable flag, restore data, run cleanup)
+- Treat rollout, partial states, and recovery as first-class behavior.
+- Sequence preconditions, rollout steps, verification, and rollback explicitly.
+- Verify both the new code and the release mechanics.
+- Leave breadcrumbs for operators, not only developers.
+
+## Resolve explicitly
+
+- What must happen before, during, and after release?
+- What partial-release states are acceptable?
+- What signal should fail first if the release is wrong?
+- What is the rollback or repair path?
+
+## Minimum proof
+
+- Ordered release or migration plan
+- Smoke validation for the changed runtime path
+- Monitoring and rollback watchpoints called out explicitly

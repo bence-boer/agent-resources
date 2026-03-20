@@ -1,4 +1,4 @@
-# Domain — Correctness
+# Domain - Correctness
 
 ## Use when
 
@@ -6,14 +6,27 @@ The task changes behavior, invariants, permissions, calculations, or any path wh
 
 ## Route next
 
-- [testing.md](testing.md) — to design verification that catches real failures
-- [completeness.md](completeness.md) — to prove all relevant paths were exercised
-- [../finish/self-review.md](../finish/self-review.md) — to challenge whatever still feels lucky or assumed
+- [testing.md](testing.md) to design verification that catches real failures
+- [completeness.md](completeness.md) to prove all relevant paths were exercised
+- [../finish/self-review.md](../finish/self-review.md) to challenge whatever still feels lucky or assumed
 
-## Questions
+## Apply
 
-- What are the few claims this change makes, and how will you verify each one? (e.g., returns right data, blocks bad input, preserves state)
-- What test or check would catch the most embarrassing regression? (e.g., permission leak, data loss, stale UI, broken flow)
-- What manual verification is still required after automation passes? (e.g., real user flow, browser behavior, rollout smoke test)
-- What evidence would falsify your current confidence? (e.g., missing edge test, unexpected log, production mismatch)
-- Have you tested actual behavior, not just that it compiles and lints? (e.g., exercising the flow, running integration tests, checking rendered output)
+- Reduce the change to a small set of explicit claims.
+- Prefer designs where correctness follows from structure, types, and invariants rather than repeated conditionals.
+- Search for counterexamples and sibling failures, not only confirming examples.
+- Treat compilation and linting as baseline checks, not final proof.
+- Escalate to end-to-end verification when the boundary is user-visible or distributed.
+
+## Resolve explicitly
+
+- What claim would be most damaging if false?
+- What input would disprove current confidence?
+- Where can the same rule fail in a slightly different shape?
+- What must be verified in the real flow?
+
+## Minimum proof
+
+- Targeted automated proof for each material claim
+- Manual or end-to-end verification where the real boundary matters
+- No important claim left at "should work"

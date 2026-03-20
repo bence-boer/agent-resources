@@ -1,18 +1,26 @@
-# Foundation — Core framing
+# Foundation - Core framing
 
 ## Use when
 
-Every task, before choosing a solution or touching code.
+Every non-trivial task, before choosing a solution or touching code.
 
 ## Route next
 
-- [scope.md](scope.md) — if the request or boundaries are fuzzy
-- [constraints.md](constraints.md) — if risk, environment, scale, or operating limits matter
-- [../scenarios/investigation.md](../scenarios/investigation.md) — if you still need to understand the current system
+- [scope.md](scope.md) if the ask can sprawl or the minimum complete outcome is unclear
+- [constraints.md](constraints.md) if environment, compatibility, safety, or rollout limits shape the design
+- [../scenarios/investigation.md](../scenarios/investigation.md) if the current system is not understood well enough to edit safely
 
-## Questions
+## Apply
 
-- What problem are you actually solving, not just what action were you asked to perform? (e.g., unblock release, remove friction, stop data loss, reduce confusion)
-- What part of the system or workflow becomes better if this succeeds? (e.g., faster decisions, safer state, clearer recovery, less manual work)
-- What facts must you verify before deciding anything? (e.g., current behavior, real constraints, existing patterns, actual schema, prior attempts)
-- What would make this change obviously wrong even if it technically works? (e.g., user confusion, hidden coupling, harder maintenance, performance regression)
+- Restate the problem as a concrete failure, limitation, or missing capability.
+- Separate the required end state from the requested tactic.
+- Identify the core invariant or contract that should hold after the change.
+- List the facts that must be verified from code, schema, logs, or tests before deciding anything.
+- Name the highest-cost wrong solution so you do not optimize for local convenience.
+
+## Resolve explicitly
+
+- What problem are you solving at the system level?
+- What must remain true while you change it?
+- What assumptions are still guesses?
+- What would make a technically working solution still wrong?

@@ -1,4 +1,4 @@
-# Scenario — Contract change
+# Scenario - Contract change
 
 ## Use when
 
@@ -6,15 +6,28 @@ The task changes what one part of the system expects from another or what stored
 
 ## Route next
 
-- [../domains/state-and-data.md](../domains/state-and-data.md) — to restate truth, transitions, and impossible combinations
-- [../domains/correctness.md](../domains/correctness.md) — to verify both producers and consumers
-- [../domains/completeness.md](../domains/completeness.md) — to catch all mirrored readers, writers, and cleanup work
-- [../domains/observability.md](../domains/observability.md) — to watch the rollout and any drift
-- [../domains/dependencies.md](../domains/dependencies.md) — to identify all consumers of the changed contract
+- [../domains/invariants.md](../domains/invariants.md) to define the contract precisely
+- [../domains/state-and-data.md](../domains/state-and-data.md) to restate truth, transitions, and stored meaning
+- [../domains/correctness.md](../domains/correctness.md) and [../domains/completeness.md](../domains/completeness.md) to verify both producers and consumers
+- [../domains/observability.md](../domains/observability.md) to watch rollout and drift
+- [../domains/dependencies.md](../domains/dependencies.md) to identify all consumers
 
-## Questions
+## Default posture
 
-- What promise between parts of the system is changing? (e.g., payload shape, state meaning, ordering rule, event schema)
-- Who consumes this promise today, and who could break tomorrow? (e.g., UI, jobs, tests, integrations, cached data)
-- What must stay compatible, and for how long? (e.g., previous clients, stored data, phased rollout, external consumers)
-- What migration, fallback, or cleanup path keeps this change safe? (e.g., dual-read, backfill, versioning, rollback script)
+- Restate the contract in precise terms before changing code.
+- Update producers, consumers, stored data, and migration strategy together.
+- Prefer versioned or staged rollout when compatibility is uncertain.
+- Make old and new meaning explicit during transition.
+
+## Resolve explicitly
+
+- Who reads and writes this contract today?
+- What must stay compatible, and for how long?
+- What existing data must be migrated or interpreted differently?
+- How is rollback achieved if the change goes badly?
+
+## Minimum proof
+
+- Migration or compatibility validation
+- Consumer review across affected surfaces
+- Observability for drift, old clients, or mixed-version behavior
