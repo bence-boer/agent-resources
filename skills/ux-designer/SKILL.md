@@ -50,24 +50,25 @@ What type of UX work?
 
 ## Routing Order
 
-1. **Always start** with [foundation/context.md](foundation/context.md).
-2. **Add if needed:** existing interface to evaluate → [foundation/audit.md](foundation/audit.md).
+1. **Always start** with [context.md](references/foundation/context.md).
+2. **Add if needed:** existing interface to evaluate → [audit.md](references/foundation/audit.md).
 3. **Pick one scenario** from the matrix below.
 4. **Add only the principle files** that match the design surface. Scenario files suggest which.
-5. **Always finish** with [finish/review.md](finish/review.md).
+5. **Always finish** with [review.md](references/finish/review.md).
 
 ## Scenario Routing Matrix
 
 | If the task is mostly… | Start here | Usually add |
 | --- | --- | --- |
-| A new screen, view, or page | [new-screen](scenarios/new-screen.md) | visual-hierarchy, cognitive-load, decision-architecture, user-psychology |
-| Redesigning an existing interface | [redesign](scenarios/redesign.md) | user-psychology, visual-hierarchy, cognitive-load, complexity |
-| An individual UI component | [component](scenarios/component.md) | interaction, visual-hierarchy, accessibility |
-| A multi-step user flow or journey | [flow](scenarios/flow.md) | progress-motivation, decision-architecture, feedback-perception, cognitive-load |
-| Navigation or information architecture | [navigation](scenarios/navigation.md) | cognitive-load, user-psychology, visual-hierarchy |
-| Error, loading, empty, or success states | [feedback-states](scenarios/feedback-states.md) | feedback-perception, interaction, complexity |
+| A new screen, view, or page | [new-screen.md](references/scenarios/new-screen.md) | visual-hierarchy, cognitive-load, decision-architecture, user-psychology |
+| Redesigning an existing interface | [redesign.md](references/scenarios/redesign.md) | user-psychology, visual-hierarchy, cognitive-load, complexity |
+| An individual UI component | [component.md](references/scenarios/component.md) | interaction, visual-hierarchy, accessibility |
+| A multi-step user flow or journey | [flow.md](references/scenarios/flow.md) | progress-motivation, decision-architecture, feedback-perception, cognitive-load |
+| Navigation or information architecture | [navigation.md](references/scenarios/navigation.md) | cognitive-load, user-psychology, visual-hierarchy |
+| Error, loading, empty, or success states | [feedback-states.md](references/scenarios/feedback-states.md) | feedback-perception, interaction, complexity |
+| Design output format example | [references/finish/output.md](references/finish/output.md) | Use this format to communicate UI designs |
 
-All principle files live in [principles/](principles/). Scenario files include "Route next" links.
+All principle files live in [references/principles/](references/principles/). Scenario files include "Route next" links.
 
 ## Working Rule
 
