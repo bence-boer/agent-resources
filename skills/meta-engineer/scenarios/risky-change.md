@@ -1,4 +1,4 @@
-# Scenario — Risky change
+# Scenario - Risky change
 
 ## Use when
 
@@ -6,15 +6,27 @@ The task touches security, privacy, money, deletion, permissions, compliance, or
 
 ## Route next
 
-- [../domains/security.md](../domains/security.md) — to define threats and prevention clearly
-- [../domains/reliability.md](../domains/reliability.md) — to harden failure paths
-- [../domains/observability.md](../domains/observability.md) — to detect problems before users do
-- [../domains/correctness.md](../domains/correctness.md) — to raise the evidence bar
-- [../domains/testing.md](../domains/testing.md) — to prove safety with concrete verification
+- [../domains/security.md](../domains/security.md) to define threats and prevention clearly
+- [../domains/invariants.md](../domains/invariants.md) to capture the rule that must never drift
+- [../domains/reliability.md](../domains/reliability.md) and [../domains/observability.md](../domains/observability.md) to limit blast radius and detect issues quickly
+- [../domains/correctness.md](../domains/correctness.md) and [../domains/testing.md](../domains/testing.md) to raise the evidence bar
 
-## Questions
+## Default posture
 
-- What makes this change risky? (e.g., auth path, money flow, destructive action, shared primitive, trust boundary)
-- What is the worst credible outcome, and how do you prevent it? (e.g., leaked data, corrupt state, locked users out, financial loss)
-- What extra verification, observability, or review does this deserve? (e.g., audit log, pair review, staged rollout, manual sign-off)
-- What is the safest way to limit blast radius if you are wrong? (e.g., flag, guardrail, rollback, kill switch, scoped deployment)
+- Raise the evidence bar above normal feature work.
+- Fail closed by default.
+- Minimize blast radius with flags, staged rollout, scoping, or explicit guardrails.
+- Add auditability or strong diagnostics where harm would be expensive.
+
+## Resolve explicitly
+
+- What is the worst credible outcome?
+- What guardrail must exist before the dangerous action succeeds?
+- What is the rollback or recovery path?
+- Who should review or monitor this change?
+
+## Minimum proof
+
+- Security or permission verification for the risky path
+- Failure-path validation under representative bad conditions
+- Rollout guardrail and operational watchpoints

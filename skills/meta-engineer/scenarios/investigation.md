@@ -1,4 +1,4 @@
-# Scenario — Investigation
+# Scenario - Investigation
 
 ## Use when
 
@@ -6,14 +6,27 @@ The next right move is to explain what exists, why it behaves that way, and wher
 
 ## Route next
 
-- [../domains/architecture.md](../domains/architecture.md) — to reason about boundaries and ownership
-- [../domains/state-and-data.md](../domains/state-and-data.md) — to inspect truth, transitions, and impossible states
-- [../domains/observability.md](../domains/observability.md) — to identify what evidence the system exposes or hides
-- [../domains/correctness.md](../domains/correctness.md) — to verify claims against actual behavior
+- [../domains/architecture.md](../domains/architecture.md) to reason about boundaries and ownership
+- [../domains/state-and-data.md](../domains/state-and-data.md) to inspect truth, transitions, and duplication
+- [../domains/observability.md](../domains/observability.md) to identify which signals exist and which are missing
+- [../domains/correctness.md](../domains/correctness.md) to test claims against evidence
 
-## Questions
+## Default posture
 
-- What do you need to explain before you earn the right to change anything? (e.g., current flow, invariant, ownership boundary, data lifecycle)
-- What evidence distinguishes symptom from cause? (e.g., logs, reproduction, history, diff, data inspection)
-- Where could the real problem live besides the obvious file? (e.g., caller, data contract, retry logic, upstream state)
-- What would you inspect next if your first theory is wrong? (e.g., adjacent workflow, previous release, fallback path, race condition)
+- Explain current behavior, ownership, and data flow before recommending change.
+- Separate evidence from theory.
+- Follow the data and control path across boundaries, not only the obvious file.
+- End with the strongest current theory and the next best check if that theory is wrong.
+
+## Resolve explicitly
+
+- What is known from evidence?
+- What is inferred but not yet proven?
+- What evidence distinguishes symptom from cause?
+- What next check would invalidate the current theory fastest?
+
+## Minimum proof
+
+- Reproducible narrative grounded in evidence
+- Clear separation of known facts and open uncertainty
+- Concrete next action that reduces uncertainty materially

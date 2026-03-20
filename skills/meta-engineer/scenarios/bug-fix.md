@@ -1,4 +1,4 @@
-# Scenario — Bug fix
+# Scenario - Bug fix
 
 ## Use when
 
@@ -6,15 +6,28 @@ The task corrects broken behavior, invalid state, wrong output, or a reliability
 
 ## Route next
 
-- [../domains/correctness.md](../domains/correctness.md) — to prove the fix holds
-- [../domains/completeness.md](../domains/completeness.md) — to search mirrored paths and second-order effects
-- [../domains/state-and-data.md](../domains/state-and-data.md) — to restate the rule that was broken
-- [../domains/observability.md](../domains/observability.md) — to catch any recurrence early
-- [../domains/reliability.md](../domains/reliability.md) — to harden the path that failed
+- [../domains/invariants.md](../domains/invariants.md) to restate the rule that was broken
+- [../domains/correctness.md](../domains/correctness.md) to prove the fix holds
+- [../domains/completeness.md](../domains/completeness.md) to search sibling paths and second-order effects
+- [../domains/state-and-data.md](../domains/state-and-data.md) and [../domains/reliability.md](../domains/reliability.md) to prevent recurrence
+- [../domains/observability.md](../domains/observability.md) if recurrence would be expensive to miss
 
-## Questions
+## Default posture
 
-- What exact invariant is broken, and how can you reproduce it reliably? (e.g., duplicate state, wrong total, lost input, invalid transition)
-- Why did the system allow this bug to exist? (e.g., missing guard, split logic, stale assumption, absent test)
-- Where else can the same pattern fail even if the symptom differs? (e.g., sibling route, mirrored UI, shared parser, similar query)
-- What proof would convince you this bug is truly closed? (e.g., regression test, log check, multi-path reproduction)
+- Reproduce the failure or restate the broken invariant before touching the fix.
+- Fix the rule that allowed the bug, not only the observed input.
+- Search for sibling paths with the same failure class.
+- Add proof that would have caught this bug and nearby variants.
+
+## Resolve explicitly
+
+- Why was this bug possible?
+- What exact invariant was broken?
+- Where else can the same rule fail in a slightly different shape?
+- What is the smallest design change that prevents recurrence?
+
+## Minimum proof
+
+- Regression test or equivalent automated proof
+- Verification of mirrored or sibling paths
+- Observable error surfacing if silent recurrence would be costly

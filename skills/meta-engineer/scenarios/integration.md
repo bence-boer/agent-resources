@@ -1,4 +1,4 @@
-# Scenario — Integration
+# Scenario - Integration
 
 ## Use when
 
@@ -6,15 +6,28 @@ The task depends on an external system, another team, or a new boundary between 
 
 ## Route next
 
-- [../domains/dependencies.md](../domains/dependencies.md) — to contain the new coupling
-- [../domains/error-handling.md](../domains/error-handling.md) — to plan for slowness, invalid responses, and partial failure
-- [../domains/reliability.md](../domains/reliability.md) — to harden the path across the boundary
-- [../domains/architecture.md](../domains/architecture.md) — to place the integration in the right boundary
-- [../domains/security.md](../domains/security.md) — if the integration can amplify harm when it drifts or fails
+- [../domains/dependencies.md](../domains/dependencies.md) to contain the new coupling
+- [../domains/invariants.md](../domains/invariants.md) to restate the contract precisely
+- [../domains/error-handling.md](../domains/error-handling.md) and [../domains/reliability.md](../domains/reliability.md) to survive bad boundary behavior
+- [../domains/architecture.md](../domains/architecture.md) to place the integration in the right layer
+- [../domains/security.md](../domains/security.md) if the integration can amplify harm when it drifts or fails
 
-## Questions
+## Default posture
 
-- What outside system, team, or module must this work with, and what do they need from you? (e.g., stable contract, retries, idempotency)
-- What is the handshake between the systems, and where can it drift? (e.g., schema, auth, timing, encoding, versioning)
-- What happens when the other side is slow, wrong, or partially unavailable? (e.g., degrade, queue, retry, fail closed)
-- What coupling are you introducing, and how will you keep it reversible? (e.g., adapter, versioning, feature flag, abstraction layer)
+- Model the boundary: contract, auth, timing, retries, idempotency, and failure semantics.
+- Localize the external choice behind a stable interface or adapter.
+- Treat slow, wrong, partial, and unavailable responses as primary design cases.
+- Avoid leaking protocol or vendor assumptions across the codebase.
+
+## Resolve explicitly
+
+- What does the other side promise?
+- What happens if it violates that promise?
+- What coupling is being introduced?
+- What is the rollback or disconnection story?
+
+## Minimum proof
+
+- Contract validation at the boundary
+- Representative failure-path verification
+- Bounded blast radius if the integration misbehaves

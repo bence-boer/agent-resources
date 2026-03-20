@@ -1,4 +1,4 @@
-# Scenario — UI flow
+# Scenario - UI flow
 
 ## Use when
 
@@ -6,15 +6,28 @@ The task changes screens, interactions, copy, visible states, or any part of the
 
 ## Route next
 
-- [../domains/user-value.md](../domains/user-value.md) — to articulate what the user should gain or feel
-- [../domains/workflow-fit.md](../domains/workflow-fit.md) — to align the flow with surrounding journeys
-- [../domains/visual-design.md](../domains/visual-design.md) — to ensure the implementation looks and feels right
-- [../domains/error-handling.md](../domains/error-handling.md) — to preserve trust when things go wrong
-- [../domains/performance.md](../domains/performance.md) — to keep the experience responsive
+- [../domains/user-value.md](../domains/user-value.md) to articulate what the user should gain
+- [../domains/workflow-fit.md](../domains/workflow-fit.md) to align the change with the surrounding journey
+- [../domains/state-and-data.md](../domains/state-and-data.md) to model control state and derived behavior explicitly
+- [../domains/visual-design.md](../domains/visual-design.md) to keep the implementation legible and accessible
+- [../domains/error-handling.md](../domains/error-handling.md) and [../domains/performance.md](../domains/performance.md) to preserve trust and responsiveness
 
-## Questions
+## Default posture
 
-- What should the user feel at each step of this flow? (e.g., confident, guided, unblocked, in control)
-- Where can the user hesitate, misread, or lose work? (e.g., ambiguous button, hidden status, destructive default, missing confirmation)
-- How should this fit existing flows, language, and expectations? (e.g., same navigation, same feedback patterns, same recovery)
-- What makes the flow feel polished rather than merely functional? (e.g., instant feedback, useful empty state, graceful errors, micro-interactions)
+- Model the full state space of the flow, not only the ideal path.
+- Derive control state from validated form or workflow state, not scattered booleans.
+- Keep status, next action, and recovery obvious to the user.
+- Design loading, disabled, empty, success, and error states as part of the feature.
+
+## Resolve explicitly
+
+- What should disable progression?
+- What surrounding states exist around the interaction?
+- What data or async dependencies gate action?
+- What makes the flow feel complete instead of merely functional?
+
+## Minimum proof
+
+- Walkthrough of each major flow state
+- Visible feedback for pending, error, and success paths
+- No contradictory or stale UI state across refreshes or retries

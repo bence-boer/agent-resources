@@ -1,4 +1,4 @@
-# Domain — Performance
+# Domain - Performance
 
 ## Use when
 
@@ -6,14 +6,27 @@ The task affects latency, throughput, query volume, memory, cost, or user-percei
 
 ## Route next
 
-- [observability.md](observability.md) — to measure reality instead of guessing
-- [temporary-solutions.md](temporary-solutions.md) — to refuse opaque speed hacks that create lasting debt
-- [maintainability.md](maintainability.md) — to keep optimizations legible
+- [observability.md](observability.md) to measure reality instead of guessing
+- [temporary-solutions.md](temporary-solutions.md) to refuse opaque speed hacks that create lasting debt
+- [maintainability.md](maintainability.md) to keep optimizations legible
 
-## Questions
+## Apply
 
-- What cost does this change add at steady state? (e.g., extra query, heavier payload, more memory, more clicks, longer render)
-- Is there hidden computational complexity being introduced? (e.g., nested loops leading to O(n²), redundant API calls, unoptimized queries, missing pagination)
-- Which path deserves optimization because users feel it or operations pay for it? (e.g., hot list view, retry loop, import job, initial page load)
-- Am I holding resources longer than necessary? (e.g., missing cleanup, dangling listeners, unclosed connections, large buffers, retained references)
-- What would be faster today but expensive to live with later? (e.g., hidden cache invalidation, tangled memoization, denormalized sprawl, opaque batching)
+- Measure before optimizing and re-measure after.
+- Target the real hot path, repeated cost, or user-visible delay.
+- Prefer reducing work, I/O, payload size, or complexity over hidden caches.
+- Keep the optimization explainable and observable.
+- Reject speedups that create opaque long-term failure modes unless they are clearly worth it.
+
+## Resolve explicitly
+
+- What resource is actually tight?
+- What baseline and target metric matter?
+- What repeated work can be removed structurally?
+- What optimization would age badly?
+
+## Minimum proof
+
+- Evidence of improvement or justified hot-path reasoning
+- No new invisible complexity trap in the optimized path
+- Failure and recovery behavior remain understandable

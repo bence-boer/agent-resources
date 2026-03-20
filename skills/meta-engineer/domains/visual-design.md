@@ -1,4 +1,4 @@
-# Domain — Visual design
+# Domain - Visual design
 
 ## Use when
 
@@ -6,13 +6,27 @@ The task involves UI components, layout, styling, or anything the user sees.
 
 ## Route next
 
-- [user-value.md](user-value.md) — to anchor visual decisions in user outcomes
-- [workflow-fit.md](workflow-fit.md) — to ensure the design serves the flow, not just the screen
-- [developer-experience.md](developer-experience.md) — to keep visual primitives maintainable
+- [user-value.md](user-value.md) to anchor visual decisions in user outcomes
+- [workflow-fit.md](workflow-fit.md) to ensure the design serves the flow, not only the screen
+- [developer-experience.md](developer-experience.md) to keep visual primitives maintainable
 
-## Questions
+## Apply
 
-- Does the aesthetic match or elevate the existing design system? (e.g., consistent spacing, unified color palette, correct typography, shared components)
-- Is the visual hierarchy immediately obvious, guiding the user's eye to the most critical actions? (e.g., prominent primary buttons, de-emphasized secondary actions, effective whitespace)
-- How does this look, feel, and function across different environments? (e.g., mobile responsiveness, dark mode, high contrast, reduced motion, accessibility)
-- Are the visual primitives natively supported and accessible, or brittle custom implementations? (e.g., native select vs custom dropdown, semantic HTML, ARIA attributes, keyboard navigation)
+- Reuse the design system and native, accessible primitives first.
+- Make hierarchy, status, and affordances obvious.
+- Design all meaningful states: default, empty, loading, disabled, error, success.
+- Avoid custom visual machinery unless existing primitives cannot serve.
+- Keep accessibility and interaction quality part of the implementation, not post-processing.
+
+## Resolve explicitly
+
+- What is the primary action, secondary action, and warning state?
+- What must be visible in empty, loading, error, and disabled states?
+- What accessibility behavior must hold?
+- What visual complexity is unnecessary?
+
+## Minimum proof
+
+- Major visual states reviewed
+- Accessibility regressions considered as part of implementation
+- Intent remains obvious without extra explanation
