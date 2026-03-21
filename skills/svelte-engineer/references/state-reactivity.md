@@ -73,19 +73,26 @@ import { setContext, getContext } from 'svelte';
 
 const TABLE_CONTEXT_KEY = Symbol('table');
 
+enum SortDirection {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 class TableContext {
   #sort_column = $state('');
-  #sort_direction: 'asc' | 'desc' = $state('asc');
+  #sort_direction: SortDirection = $state(SortDirection.ASC);
 
   get sort_column() { return this.#sort_column; }
   get sort_direction() { return this.#sort_direction; }
 
   sort(column: string) {
     if (this.#sort_column === column) {
-      this.#sort_direction = this.#sort_direction === 'asc' ? 'desc' : 'asc';
+      this.#sort_direction = this.#sort_direction === SortDirection.ASC
+        ? SortDirection.DESC
+        : SortDirection.ASC;
     } else {
       this.#sort_column = column;
-      this.#sort_direction = 'asc';
+      this.#sort_direction = SortDirection.ASC;
     }
   }
 }
@@ -124,12 +131,17 @@ export function set_dialog_context(get_open: () => boolean, set_open: (value: bo
 
 ```ts
 // stores/theme.svelte.ts
+enum ThemeMode {
+  LIGHT = 'light',
+  DARK = 'dark',
+}
+
 class ThemeStore {
-  mode: 'light' | 'dark' = $state('light');
-  is_dark = $derived(this.mode === 'dark');
+  mode: ThemeMode = $state(ThemeMode.LIGHT);
+  is_dark = $derived(this.mode === ThemeMode.DARK);
 
   toggle() {
-    this.mode = this.mode === 'light' ? 'dark' : 'light';
+    this.mode = this.mode === ThemeMode.LIGHT ? ThemeMode.DARK : ThemeMode.LIGHT;
   }
 
   constructor() {

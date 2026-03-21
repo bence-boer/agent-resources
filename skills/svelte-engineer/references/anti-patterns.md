@@ -193,6 +193,76 @@ const html2pdf = (await import('html2pdf.js')).default;
 <a class={cn('group floating-border overflow-hidden', classes)}>
 ```
 
+### Direct File or Sub-Barrel Imports → Package Barrel
+
+```ts
+// ❌
+import Button from '$lib/components/ui/button/button.svelte';
+import { Button } from '$lib/components/ui/button';
+
+// ✅
+import { Button } from '$lib/components/ui';
+```
+
+### Page-Only Components in `$lib/components` → Route-Local Placement
+
+```text
+❌ src/lib/components/dashboard-metrics.svelte
+✅ src/routes/(app)/dashboard/components/dashboard-metrics.svelte
+```
+
+Promote into `$lib/components` only after a second real consumer appears.
+
+### Runtime Values Marked as `type` → Value Imports and Exports
+
+```ts
+// ❌
+import { type ButtonVariant } from './button-variant.ts';
+export { type ButtonVariant };
+
+// ✅
+import { ButtonVariant } from './button-variant.ts';
+export { ButtonVariant };
+```
+
+Use `type` only for true types. Enums, const maps, and variant helpers are runtime values.
+
+### Closed String Domains → Enums
+
+```ts
+// ❌
+type ThemeMode = 'light' | 'dark';
+type ButtonSize = 'sm' | 'md' | 'lg';
+
+// ✅
+enum ThemeMode {
+  LIGHT = 'light',
+  DARK = 'dark',
+}
+
+enum ButtonSize {
+  SM = 'sm',
+  MD = 'md',
+  LG = 'lg',
+}
+```
+
+Use enums for closed runtime sets such as variants, sizes, modes, statuses, and sort directions.
+
+### Instance-Script Variant Helpers → Module-Script Exports
+
+```svelte
+<!-- ❌ -->
+<script lang="ts">
+  const button_variants = tv({ ... });
+</script>
+
+<!-- ✅ -->
+<script lang="ts" module>
+  export const button_variants = tv({ ... });
+</script>
+```
+
 ### Inline `as const` → Derived Types
 
 ```ts

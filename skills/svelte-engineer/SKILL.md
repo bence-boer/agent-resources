@@ -67,6 +67,10 @@ These are implementation boundaries, not stylistic preferences.
 - Use `.svelte.ts` for files that contain runes outside a component.
 - Prefer named exports and barrel files for components.
 - Pass DOM classes through `class: class_name` and compose with `cn()`.
+- Define reusable variants and exported component types in `<script lang="ts" module>`.
+- Use arrays in `tv()` and multi-line template classes once a class list stops being readable on one line.
+- Use enums for closed string domains such as variants, sizes, modes, and statuses. Enum members use `SCREAMING_SNAKE_CASE`; enum values stay kebab-case.
+- Use `type` imports and exports only for true types. Enums, const maps, variant helpers, and other runtime values stay value imports and exports.
 
 ## Component API defaults
 
@@ -79,9 +83,16 @@ Make component surfaces small, typed, and predictable.
 | Child content | `children` is the default snippet; add named snippets only for stable regions like `header`, `footer`, or `trigger` |
 | Semantic events | Use callback props named for the action: `on_save`, `on_select`, `on_close` |
 | DOM events | Pass through native event attributes like `onclick` rather than wrapping them into a custom callback unless the meaning changes |
-| Variant API | Define visual variants once, export the derived variant types, and keep domain state out of the variant layer |
-| Export surface | One local `index.ts` barrel with named exports |
+| Variant API | Define visual variants once in module scope, back closed string domains with enums, export runtime helpers as values, and export prop types with `type` |
+| Export surface | Shared primitives use both a local barrel (`ui/button/index.ts`) and the package barrel (`ui/index.ts`) so consumers import from `$lib/components/ui` |
 | Data props | Pass the narrow data shape the component needs, not a whole service or store object |
+
+## Shared component organization
+
+- Put each reusable component in its own directory under `$lib/components/ui/` or `$lib/components/[feature]/`.
+- Keep page-specific components in `routes/**/components/`.
+- Promote a page-local component into `$lib/components` only after a second consumer appears.
+- Use the local `index.ts` barrel as the component surface and re-export shared primitives again from `$lib/components/ui/index.ts`; see [component-patterns](references/component-patterns.md) for the concrete pattern.
 
 ## Page defaults
 
@@ -154,6 +165,7 @@ Use these defaults to keep files cohesive.
 - component files: kebab-case
 - component exports: PascalCase
 - rune utilities: snake_case function or class exports in `.svelte.ts`
+- enum members: `SCREAMING_SNAKE_CASE` with kebab-case runtime values
 - callback props: `on_verb` or `on_domain_action`
 - snippet props: semantic names, but keep the set small
 - `data-slot` values: semantic and stable, matching the rendered part name

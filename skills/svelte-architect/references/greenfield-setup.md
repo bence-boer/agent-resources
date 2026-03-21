@@ -18,6 +18,7 @@ Start with these defaults unless the task names a stronger constraint.
 | Mutations | Form actions |
 | Global client state | Keep minimal: auth/session, theme, feature flags |
 | Type safety across backend | One typed client boundary, not scattered manual types |
+| Shared component placement | Group reusable UI by function in `$lib/components`; keep page-only UI in `routes/**/components` |
 
 If you deviate from one of these defaults, name the reason explicitly.
 
@@ -34,15 +35,16 @@ Default shell map:
 
 Avoid grouping by domain first. A route tree like `(billing)/`, `(projects)/`, `(reports)/` at the top level usually bakes product taxonomy into the shell and makes layouts rigid.
 
-## 3. Use a three-layer UI model
+## 3. Use a four-layer UI model
 
 Start with these UI boundaries:
 
-1. `ui/` primitives - reusable visual building blocks with no business logic
-2. feature components - domain UI that composes primitives and owns feature behavior
-3. routes - thin orchestration around loaded data, navigation, and page composition
+1. design tokens in `app.css`
+2. `ui/` primitives in `$lib/components/ui/`
+3. feature components in `$lib/components/[feature]/`
+4. route-local components in `routes/**/components/`
 
-Avoid a broad `components/shared/` bucket. Either something is a primitive, a feature component, or route-local.
+Group shared components by function, not by page. If a component only serves one route, keep it with that route and promote it only after a second real consumer appears.
 
 ## 4. Plan state before creating stores
 
@@ -106,14 +108,23 @@ src/
 ├── lib/
 │   ├── components/
 │   │   ├── ui/
+│   │   │   ├── index.ts
+│   │   │   └── button/
+│   │   │       ├── button.svelte
+│   │   │       └── index.ts
 │   │   └── [feature]/
+│   │       ├── widget.svelte
+│   │       └── index.ts
 │   ├── features/
 │   ├── server/
 │   ├── utils/
 │   └── validation/
 ├── routes/
 │   ├── (marketing)/
+│   │   └── components/
 │   ├── (app)/
+│   │   └── [route]/
+│   │       └── components/
 │   ├── (auth)/
 │   └── api/
 ├── hooks.server.ts
@@ -121,6 +132,8 @@ src/
 ├── app.d.ts
 └── app.css
 ```
+
+`app.css` owns design tokens, reusable utility classes, and shared data-attribute variants. The `ui/index.ts` barrel exposes primitives from `$lib/components/ui`; concrete export mechanics belong in the engineer layer.
 
 Keep the number of top-level concepts small. If a new folder does not express ownership clearly, it probably does not belong yet.
 

@@ -64,6 +64,7 @@ Start here unless the task supplies a stronger constraint.
 - Group routes by shell, navigation, and access control, not by an arbitrary feature taxonomy.
 - Keep domain UI close to the feature it serves. Avoid a generic `shared/` dumping ground.
 - Keep design-system primitives separate from feature components. If a primitive needs business logic, it is no longer a primitive.
+- Keep page-only UI with the route that owns it. Move components into `$lib/components` only after they have more than one real consumer, and group that shared library by function rather than by page.
 
 ### 2. Keep server-owned data on the server by default
 
@@ -100,10 +101,10 @@ Default layering:
 
 1. design tokens
 2. `ui/` primitives
-3. feature components
-4. route pages/layouts
+3. feature components in `$lib/components/[feature]`
+4. page-local components in `routes/**/components`
 
-Avoid collapsing these layers together. A page should not become the design system, and a primitive should not become the feature.
+Promote page-local pieces only when reuse is proven. Avoid collapsing these layers together. A page should not become the design system, and a primitive should not become the feature.
 
 ### 5. Architect for complete user journeys
 
@@ -158,6 +159,9 @@ Treat these as meaningful problems, not style nits:
 - custom client fetching used where load/actions would be simpler and safer
 - every new feature requiring a new abstraction before any real repetition exists
 - architecture advice that never commits to an actual default
+- page-specific components placed in the shared library without a second consumer
+- shared component folders mirroring pages instead of reusable functions
+- reusable UI with no clear primitive vs feature vs page-local ownership
 
 ## Handoff to the engineer
 

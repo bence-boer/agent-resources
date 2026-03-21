@@ -51,9 +51,21 @@ resolve: { alias: { '@backend': path.resolve(__dirname, '../backend/src') } }
 import type { HTMLButtonAttributes } from 'svelte/elements';
 import type { Snippet } from 'svelte';
 
+enum ButtonVariant {
+  DEFAULT = 'default',
+  DESTRUCTIVE = 'destructive',
+  OUTLINE = 'outline',
+}
+
+enum ButtonSize {
+  SM = 'sm',
+  MD = 'md',
+  LG = 'lg',
+}
+
 type ButtonProps = HTMLButtonAttributes & {
-  variant?: 'default' | 'destructive' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   children?: Snippet;
 };
 ```
@@ -71,7 +83,7 @@ type WithElementRef<
 
 ```ts
 import type { ComponentProps } from 'svelte';
-import { Button } from './button.svelte';
+import { Button } from '$lib/components/ui';
 
 type ButtonProps = ComponentProps<typeof Button>;
 ```
