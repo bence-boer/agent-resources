@@ -1,191 +1,219 @@
 ---
 name: skill-creator
-description: Create new skills and modify existing skills. Use when users want to create a skill from scratch, edit or simplify an existing skill, improve a skill's instructions or description, validate a SKILL.md file, or package a skill for distribution.
+description: >
+  Create, split, rewrite, and validate standalone Markdown skills in any domain. Use for any
+  `SKILL.md` work: new skills, skill refactors, skill splits, turning docs/history/examples into a
+  skill, tightening frontmatter and descriptions, or validation and packaging. Produces concise,
+  dry, information-dense, comprehensive skills with explicit boundaries and minimal overlap.
 ---
 
 # Skill Creator
 
-Create new skills and refine them directly.
+Create standalone skills that are easy to trigger, easy to load, and hard to misuse.
 
-## Core workflow
+## Anatomy of a skill
 
-1. Capture intent - what should the skill do and when should it trigger
-2. Draft the skill
-3. Validate the structure and fix obvious issues
-4. Refine the draft directly when gaps are clear from the conversation or examples
-5. Package the skill when the user wants a distributable artifact
-
-Identify where the user is in this process and pick up from there. If they already have a draft, skip to reviewing and editing it. The order is flexible - follow the user's lead, but keep the work direct and lightweight.
-
-## Communication
-
-Calibrate jargon to the user's familiarity level. Terms like "frontmatter" and "compatibility" are generally fine. For "JSON", "YAML", or similar technical terms, briefly explain them unless the user has clearly demonstrated familiarity.
-
----
-
-## Creating a skill
-
-### Capture Intent
-
-Start by understanding the user's intent. The current conversation might already contain a workflow the user wants to capture (e.g., they say "turn this into a skill"). If so, extract answers from the conversation history first - the tools used, the sequence of steps, corrections the user made, input/output formats observed. The user may need to fill the gaps, and should confirm before proceeding to the next step.
-
-1. What should this skill enable the agent to do?
-2. When should this skill trigger? (what user phrases/contexts)
-3. What's the expected output format?
-4. Are there example prompts, files, or constraints that should shape the draft?
-
-### Interview and Research
-
-Proactively ask questions about edge cases, input/output formats, example files, success criteria, and dependencies. Wait to write the draft until you've got this part ironed out.
-
-Check available MCPs - if useful for research (searching docs, finding similar skills, looking up best practices), research in parallel via subagents if available, otherwise inline. Come prepared with context to reduce burden on the user.
-
-### Write the SKILL.md
-
-Based on the user interview, fill in these components:
-
-- **name**: Skill identifier
-- **description**: Primary triggering mechanism - include both what the skill does AND specific contexts for when to use it. All "when to use" info belongs here, not in the body. Models tend to undertrigger skills, so make descriptions assertive about when to activate. Example: instead of "Build dashboards for internal data", write "Build dashboards for internal data. Use whenever the user mentions dashboards, data visualization, internal metrics, or wants to display company data, even without explicitly asking for a 'dashboard.'"
-- **compatibility**: Required tools, dependencies (optional, rarely needed)
-- **body**: The skill's instructions - workflow steps, decision logic, output formats, constraints, and references to bundled resources
-
-### Skill Writing Guide
-
-#### Anatomy of a Skill
+A skill is a directory containing a `SKILL.md` plus optional secondary files.
 
 ```
 skill-name/
-|- SKILL.md (required)
-|  |- YAML frontmatter (name, description required)
-|  \- Markdown instructions
-\- Bundled Resources (optional)
-   |- scripts/    - Executable code for deterministic/repetitive tasks
-   |- references/ - Docs loaded into context as needed
-   \- assets/     - Files used in output (templates, icons, fonts)
+├── SKILL.md            # required — frontmatter + Markdown body
+├── references/         # docs, guides, examples loaded selectively
+├── scripts/            # executable utilities for deterministic tasks
+└── assets/             # templates, icons, or other output files
 ```
 
-#### Progressive Disclosure
+**Frontmatter** (YAML block between `---` delimiters at the top of `SKILL.md`) requires `name` and `description`. All other fields are optional.
 
-Skills use a three-level loading system:
-1. **Metadata** (name + description) - Always in context (~100 words)
-2. **SKILL.md body** - In context whenever skill triggers (<500 lines ideal)
-3. **Bundled resources** - As needed (unlimited, scripts can execute without loading)
+**Three loading levels** — only the relevant level is loaded into context:
 
-These word counts are approximate and you can feel free to go longer if needed.
+1. `name` + `description` — always in context, drives skill discovery and triggering
+2. `SKILL.md` body — loaded when the skill is invoked
+3. Secondary files — loaded on demand, only when the agent routes to them
 
-**Key patterns:**
-- Keep SKILL.md under 500 lines; if you're approaching this limit, add an additional layer of hierarchy along with clear pointers about where the model using the skill should go next to follow up.
-- Reference files clearly from SKILL.md with guidance on when to read them
-- For large reference files (>300 lines), include a table of contents
+Keep the `SKILL.md` body worth loading by default. Push depth into secondary files only when it is genuinely conditional.
 
-**Domain organization**: When a skill supports multiple domains/frameworks, organize by variant:
-```
-cloud-deploy/
-|- SKILL.md (workflow + selection)
-\- references/
-   |- aws.md
-   |- gcp.md
-   \- azure.md
-```
-The agent reads only the relevant reference file.
+## What this skill owns
 
-#### Safety
+Use this skill for:
 
-Skills must not contain malware, exploit code, or content that could compromise system security. A skill's contents should not surprise the user in their intent if described. Decline requests to create skills designed for unauthorized access, data exfiltration, or other malicious purposes.
+- creating or rewriting skills in any domain: software, design, research, writing, operations, analysis, education, or mixed workflows
+- splitting one skill into multiple complementary skills or merging an over-fragmented set back into one
+- turning docs, prompts, history, examples, transcripts, or working practices into a reusable skill
+- reviewing descriptions, boundaries, routing, structure, references, examples, finish criteria, and packaging
 
-#### Writing Patterns
+This skill is about authoring skills. If the user wants some other artifact, use this skill only when the result should itself be a skill.
 
-Prefer using the imperative form in instructions.
+## Outcome standard
 
-**Defining output formats** - You can do it like this:
-```markdown
-## Report structure
-ALWAYS use this exact template:
-# [Title]
-## Executive summary
-## Key findings
-## Recommendations
-```
+These properties apply both to this skill and to every skill it authors or refines:
 
-**Examples pattern** - It's useful to include examples. You can format them like this (but if "Input" and "Output" are in the examples you might want to deviate a little):
-```markdown
-## Commit message format
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output: feat(auth): implement JWT-based authentication
-```
+- dry, factual, standalone language; no motivational filler, no process commentary, no conversation context
+- concise but comprehensive: every section must route, constrain, default, clarify, or validate
+- root-first design: anything relevant on every invocation belongs in `SKILL.md`
+- secondary files only for conditional depth: scenario, domain, variant, catalog, large source docs, or optional examples
+- standalone skills only: never link to skills or assets outside the skill's own folder
+- strong concern boundaries: minimal overlap between sibling skills and between root vs secondary files
+- decisive guidance: do not leave goals so broad that almost any choice can be justified
+- triggerable frontmatter: the description must say what the skill does and when it should activate
+- generality without vagueness: reusable across the intended domain, not overfit to one example
+- dominant-mode structure: thinking, prescriptive, and reference skills should not read the same
 
-### Writing Style
+## First classify the job
 
-- **Explain intent over mandating behavior.** Rather than rigid MUST/NEVER rules, explain why a pattern matters. A model that understands reasoning adapts to novel situations; one following brittle rules breaks on edge cases. Reserve imperative directives for hard safety and correctness boundaries.
-- **Generalize, don't overfit.** Write skills that work across many prompts, not just the examples at hand. If a behavior is stubborn, try different framing or patterns rather than adding restrictive constraints.
-- **Keep the prompt lean.** Every instruction should pull its weight. If the current draft causes unproductive work, cut or rephrase the responsible instructions.
-- **Bundle repeated work.** If a skill repeatedly needs the same helper logic or multi-step deterministic task, write the script once, put it in `scripts/`, and reference it from the skill.
+| If the user wants... | Do this |
+| --- | --- |
+| a new skill | choose the dominant mode, define the owned surface, then design structure before writing |
+| an existing skill improved | preserve the name, remove drift, tighten boundaries, and rewrite stale sections instead of layering on top |
+| one skill split or several skills merged | define ownership boundaries first, then decide what genuinely belongs together |
+| docs, prompts, history, or examples distilled into a skill | analyze chronologically when time matters, keep stable conclusions, and do not mirror the source blindly |
+| validation or packaging only | validate first; package only if requested |
 
-### How skill triggering works
+## Then choose the dominant mode
 
-Understanding the triggering mechanism helps design better descriptions. In environments with skill discovery, skills appear in the agent's available skill list with their name + description, and the agent decides whether to consult a skill based on that description. The important thing to know is that agents only consult skills for tasks they can't easily handle on their own - simple, one-step queries like "read this PDF" may not trigger a skill even if the description matches perfectly, because the agent can handle them directly with basic tools. Complex, multi-step, or specialized queries reliably trigger skills when the description matches.
+Most skills are built in one dominant mode. A skill may borrow a little from a second mode, but the root file must clearly lead with one.
 
-This means the description should emphasize user intent, the situations where the skill adds leverage, and the kinds of tasks that benefit from specialized guidance.
+### Thinking skill
 
-## Direct refinement
+Use when the skill should improve judgment across many scenarios rather than prescribe one fixed way of doing the work.
 
-When a user wants to change an existing skill, make the requested edits directly.
+Root usually contains:
 
-1. Read the current `SKILL.md` and any bundled resources it references.
-2. Identify which instructions, examples, or helpers still support the intended use case.
-3. Remove or rewrite parts that no longer fit.
-4. Check that the remaining guidance is internally consistent and that all file references still resolve.
-5. If helpful, walk through a few representative prompts conversationally to sanity-check the draft.
+- one-sentence purpose
+- routing order or scenario matrix
+- short principles, questions, or decision lenses
+- finish or self-review criteria
 
----
+Prefer questions, invariants, discriminating matrices, and compact prescriptions.
+
+Avoid file-level detail, giant singleton files, and vague philosophy that cannot rule anything out.
+
+### Prescriptive skill
+
+Use when the skill should tell the agent how to perform recurring work, create a defined artifact, follow a stable format, or apply defaults on a known surface.
+
+This mode also covers builder or process skills such as skill creation, reporting, auditing, planning, formatting, and workflow execution.
+
+Root usually contains:
+
+- one-sentence purpose
+- what the skill owns and what it does not own
+- routing by task or surface if needed
+- defaults, rules, thresholds, process steps, or output expectations
+
+Prefer ownership rules, defaults, checklists, thresholds, and clear format contracts.
+
+Avoid broad goals with no defaults, or turning a prescriptive skill into an open-ended theory document.
+
+### Reference skill
+
+Use when the main job is to make a large knowledge base, manual, catalog, or external system usable inside the agent.
+
+Root usually contains:
+
+- one-sentence purpose
+- key facts that change how the source should be read
+- a routing matrix, index, or topic map
+- local conventions or caveats
+
+Prefer thin routing plus curated depth.
+
+Avoid rewriting the whole source into prose or leaving a raw dump with no navigation layer.
+
+## Root vs secondary files
+
+`SKILL.md` should always contain:
+
+- what the skill is for
+- when to use it
+- the globally relevant rules
+- the dominant mode and boundaries
+- how to route deeper
+- how to finish or validate
+
+Move content into secondary files only when it is not always relevant.
+
+Good reasons to split:
+
+- scenario-specific depth
+- domain- or variant-specific detail
+- large source material that must be routed selectively
+- optional examples or catalogs that would bloat the root
+
+If a file would be used on every invocation, merge it back into `SKILL.md`.
+
+One concern per secondary file. Do not split just to chase smaller files; split when it reduces context load and overlap.
+
+## Standalone and split rules
+
+Every skill must stand on its own, even if it has a complement elsewhere.
+
+- explain the skill's purpose, owned surface, and non-goals inside the skill itself
+- never link to skills or assets outside the skill's own folder
+- if adjacent surfaces matter, describe the boundary generically instead of pointing outside the folder
+- split one skill into several only when the user should make a meaningful choice before loading detail
+- if sibling skills would share large parts of the same prose, the split is probably wrong or the shared truth should move into a file inside each skill as needed
+
+## Writing rules
+
+- Distill; do not copy prompts, commit history, transcripts, or docs into the final instructions.
+- Keep conclusions, not provenance.
+- If the source spans time, analyze it in chronological order and let later stable guidance override earlier obsolete guidance.
+- If a stable default exists, state it.
+- If several valid paths exist, use the smallest useful routing matrix or question set.
+- Use examples only when they remove ambiguity faster than prose; keep them short and representative.
+- If examples start carrying the real rules, move those rules into the instructions.
+- Do not make every skill sound like a thinking skill if the user actually needs defaults or reference routing.
+- Do not repeat the same guidance in the root and in secondary files.
+- Do not repeat the same guidance across sibling skills unless local repetition prevents a likely misuse.
+
+## Description rules
+
+The `description` field is the skill's discovery surface. It should:
+
+1. name the capability in concrete terms
+2. say when to use the skill
+3. differentiate it from nearby skills only when that prevents overlap or misfires
+
+Bad descriptions are generic, vague, or keyword-stuffed. Good descriptions are capability-first and trigger-rich.
+
+## Minimal root shapes
+
+Use these as starting patterns.
+
+- Thinking skill root: purpose -> routing order -> core questions or principles -> scenario matrix if needed -> finish review
+- Prescriptive skill root: purpose -> what it owns -> non-goals if needed -> routing by task or surface -> defaults or workflow -> output expectations
+- Reference skill root: purpose -> key facts -> routing matrix or index -> local conventions or caveats
+
+If a skill mixes modes, the root should still read clearly as one of the three shapes above.
+
+## Authoring workflow
+
+1. Extract intent from the conversation, files, examples, or source history first. Ask the user only when missing information materially changes scope or behavior.
+2. Identify the owned surface, dominant mode, explicit non-goals, and what is universally relevant.
+3. Gather source material narrowly. If the source spans time, read it in chronological order and let later stable patterns override earlier ones.
+4. Decide what belongs in the root and what is truly conditional enough for a secondary file.
+5. Draft in the dominant mode using the matching root shape.
+6. Use subagents for large independent research surfaces, not for overlapping authorship. One agent should do the final synthesis.
+7. Tighten the draft until each section is unambiguous, non-repetitive, and worth loading into context.
+8. Validate. Package only if the user asked for a distributable artifact.
+
+## Updating existing skills
+
+- Preserve the existing `name` and directory unless the user explicitly wants a rename.
+- Remove stale or conflicting sections instead of stacking new guidance on top of them.
+- Re-check every referenced file path after moving or splitting content.
+- If the installed skill is read-only, edit a copy in `/tmp/` and package from there.
 
 ## Validate and package
 
 Before handing the skill back:
 
-1. Run `python -m scripts.quick_validate <path-to-skill>` to catch frontmatter or structure issues.
-2. If the user wants an installable artifact, package it:
-   ```bash
-   python -m scripts.package_skill <path/to/skill-folder>
-   ```
-3. If packaging succeeds, tell the user where the `.skill` file was written.
-
-### Package and Present (only if `present_files` tool is available)
-
-Check whether you have access to the `present_files` tool. If you don't, skip this step. If you do, package the skill and present the .skill file to the user:
-
-```bash
-python -m scripts.package_skill <path/to/skill-folder>
-```
-
-After packaging, direct the user to the resulting `.skill` file path so they can install it.
-
----
-
-## Environment adaptations
-
-The core workflow (capture intent -> draft -> refine directly -> package) is the same everywhere. Adapt mechanics based on available capabilities.
-
-### Without subagents
-
-- Research and edit inline.
-- If helpful, sanity-check the draft with a few representative prompts in conversation rather than building extra tooling around the review.
-
-### Headless / remote environments
-
-- Validation (`quick_validate.py`) and packaging (`package_skill.py`) work normally in headless environments.
-- Present results in conversation and point the user at the final skill path or packaged artifact.
-
-### Updating an existing skill
-
-- **Preserve the original name.** Keep the directory name and `name` frontmatter field unchanged.
-- **Copy to a writable location before editing.** The installed skill path may be read-only. Copy to `/tmp/skill-name/`, edit there, and package from the copy.
-- **Stage in `/tmp/` first** when packaging manually - direct writes may fail due to permissions.
-
----
-
-## Bundled scripts
-
-- `scripts/quick_validate.py` - Basic validation for `SKILL.md` frontmatter and related metadata
-- `scripts/package_skill.py` - Package a skill into a distributable `.skill` archive
+1. Run `python -m scripts.quick_validate <path-to-skill>`.
+2. Check that the description is clear and triggerable.
+3. Check that the root `SKILL.md` is worth loading by default and contains all globally relevant rules.
+4. Check that the skill is standalone and does not reference anything outside its own folder.
+5. Check that overlap is minimal and no important user requirement was lost during distillation.
+6. Check that every referenced file path resolves.
+7. If the user wants an installable artifact, run `python -m scripts.package_skill <path/to/skill-folder>`.
+8. Report the final skill path and packaged `.skill` path if one was created.
