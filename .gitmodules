@@ -1,0 +1,3 @@
+[submodule "skills/copilot-sdk/references/copilot-sdk"]
+	path = skills/copilot-sdk/references/copilot-sdk
+	url = https://github.com/github/copilot-sdk.git
