@@ -41,11 +41,9 @@ Reference these guidelines when:
 
 Read individual rule files for detailed explanations and SQL examples:
 
-```
-references/query-missing-indexes.md
-references/schema-partial-indexes.md
-references/_sections.md
-```
+- [query-missing-indexes.md](references/query-missing-indexes.md)
+- [schema-partial-indexes.md](references/query-partial-indexes.md)
+- [_sections.md](references/_sections.md)
 
 Each rule file contains:
 - Brief explanation of why it matters

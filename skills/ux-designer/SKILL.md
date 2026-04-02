@@ -68,7 +68,7 @@ What type of UX work?
 | Error, loading, empty, or success states | [feedback-states.md](references/scenarios/feedback-states.md) | feedback-perception, interaction, complexity |
 | Design output format example | [references/finish/output.md](references/finish/output.md) | Use this format to communicate UI designs |
 
-All principle files live in [references/principles/](references/principles/). Scenario files include "Route next" links.
+All principle files live under `references/principles/`. Scenario files include "Route next" links.
 
 ## Working Rule
 

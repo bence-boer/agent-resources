@@ -59,7 +59,7 @@ Provides a structured thinking framework for applying engineering rigor to softw
 | Performance, scale, or capacity work | [performance](scenarios/performance.md) | performance, observability, architecture, maintainability, temporary-solutions |
 | Release, rollout, deployment, or ops change | [release](scenarios/release.md) | observability, reliability, completeness, security, testing |
 
-All domain files live in [domains/](domains/). Read narrowly, but do not stop early.
+All domain files live under the `domains/` folder. Read narrowly, but do not stop early.
 
 ## Working rule
 

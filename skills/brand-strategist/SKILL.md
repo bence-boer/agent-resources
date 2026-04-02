@@ -41,7 +41,7 @@ Do not read everything. Read only the files matching the current task. Use the r
 | Defining B2B vs B2C strategy or ABM | audience | content, psychology |
 | Crafting sensory or experiential brand elements | sensory | visual-identity, experience |
 
-All domain files live in [references/domains/](references/domains/).
+All domain files live under `references/domains/`.
 
 ## Key principle
 

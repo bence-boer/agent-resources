@@ -41,7 +41,7 @@ npm run build
    npm run build
    ```
 
-5. **Review** the generated `AGENTS.md`
+5. **Review** the generated [AGENTS.md](AGENTS.md)
 
 ## Skill Structure
 
@@ -63,7 +63,7 @@ packages/skills-build/
 
 ## Reference File Structure
 
-See `references/_template.md` for the complete template. Key elements:
+See [_template.md](references/_template.md) for the complete template. Key elements:
 
 ````markdown
 ---
@@ -95,7 +95,7 @@ tags: relevant, keywords
 ```
 ## Writing Guidelines
 
-See `references/_contributing.md` for detailed guidelines. Key principles:
+See [_contributing.md](references/_contributing.md) for detailed guidelines. Key principles:
 
 1. **Show concrete transformations** - "Change X to Y", not abstract advice
 2. **Error-first structure** - Show the problem before the solution

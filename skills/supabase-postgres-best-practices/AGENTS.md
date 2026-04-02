@@ -12,7 +12,7 @@ supabase-postgres-best-practices/
 
 ## Usage
 
-1. Read `SKILL.md` for the main skill instructions
+1. Read [SKILL.md](SKILL.md) for the main skill instructions
 2. Browse `references/` for detailed documentation on specific topics
 3. Reference files are loaded on-demand - read only what you need
 

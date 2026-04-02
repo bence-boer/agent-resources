@@ -927,4 +927,4 @@ You can show the number of selected rows using the `table.getFilteredSelectedRow
 
 ## Reusable Components
 
-Check out the [Tasks](/examples/tasks) example to learn about creating reusable components for your data tables.
+Check out the upstream Tasks example to learn about creating reusable components for your data tables.

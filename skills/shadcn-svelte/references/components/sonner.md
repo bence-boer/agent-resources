@@ -17,7 +17,7 @@ Setup theme support</Step>
 
 By default, Sonner will use the user's system preferences to determine whether to show the light or dark theme. To get around this, you can either pass in a custom `theme` prop to the component, or simply use [mode-watcher](https://github.com/svecosystem/mode-watcher) which you can hardcode to `dark` or `light` mode should you wish.
 
-You can learn more about setting up Dark Mode support [here](/docs/dark-mode).
+You can learn more about setting up Dark Mode support in [setup.md](../setup.md#dark-mode).
 
 If you wish to opt out of Dark Mode support, you can uninstall `mode-watcher` and remove the `theme` prop from the component after installing via CLI, or manually install the component and don't include `mode-watcher`
 

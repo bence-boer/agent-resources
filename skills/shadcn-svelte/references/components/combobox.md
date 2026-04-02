@@ -8,7 +8,7 @@ component: true
 
 The Combobox is built using a composition of the `<Popover />` and the `<Command />` components.
 
-See installation instructions for the [Popover](/docs/components/popover#installation) and the [Command](/docs/components/command#installation) components.
+See installation instructions for [Popover](popover.md#installation) and [Command](command.md#installation).
 
 ## Usage
 

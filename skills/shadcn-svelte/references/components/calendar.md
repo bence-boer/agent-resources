@@ -12,7 +12,7 @@ links:
 
 We have built a collection of 30+ calendar blocks that you can use to build your own calendar components.
 
-See call calendar blocks in the [Blocks Library](/blocks/calendar) page.
+See calendar blocks in the upstream Blocks Library.
 
 ## Installation
 
@@ -20,11 +20,11 @@ See call calendar blocks in the [Blocks Library](/blocks/calendar) page.
 
 The `<Calendar />` component is built on top of the [Bits UI Calendar](https://www.bits-ui.com/docs/components/calendar) component, which uses the [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/index.html) package to handle dates.
 
-If you're looking for a range calendar, check out the [Range Calendar](/docs/components/range-calendar) component.
+If you're looking for a range calendar, check out [Range Calendar](range-calendar.md).
 
 ## Date Picker
 
-You can use the `<Calendar />` component to build a date picker. See the [Date Picker](/docs/components/date-picker) page for more information.
+You can use the `<Calendar />` component to build a date picker. See [Date Picker](date-picker.md) for more information.
 
 ## Examples
 

@@ -30,7 +30,7 @@ Read only the reference that matches the task.
 
 | Task | Read |
 | --- | --- |
-| Adding a component, looking up usage/API/examples | [component-index](references/component-index.md) then the specific [component file](references/components/) |
+| Adding a component, looking up usage/API/examples | [component-index](references/component-index.md) then the specific component file it routes to |
 | Project setup, CLI commands, components.json, dark mode | [setup](references/setup.md) |
 | CSS variables, design tokens, custom colors, base colors | [theming](references/theming.md) |
 | Building forms with Formsnap/Superforms/Zod, or using Field | [forms](references/forms.md) |

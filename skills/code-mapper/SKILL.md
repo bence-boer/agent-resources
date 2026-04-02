@@ -171,12 +171,12 @@ invokes:
 
 ## Routing to secondary files
 
-- For a new map, open exactly one depth template in `assets/templates/`:
-    - `L0-L1.md` - one minimal graph at system/module depth
-    - `L0-L2.md` - one minimal graph with symbol-level working context
-    - `L1-L3.md` - one minimal graph with detail nodes for deep investigation
+- For a new map, open exactly one depth template from the `assets/templates` folder:
+    - [L0-L1.md](assets/templates/L0-L1.md) - one minimal graph at system/module depth
+    - [L0-L2.md](assets/templates/L0-L2.md) - one minimal graph with symbol-level working context
+    - [L1-L3.md](assets/templates/L1-L3.md) - one minimal graph with detail nodes for deep investigation
 - Each depth template shows one simple graph that includes the common subgraph patterns in context.
-- For updating an existing map after code changes, use `references/updating-maps.md`.
+- For updating an existing map after code changes, use [updating-maps.md](references/updating-maps.md).
 
 ## Validation checklist
 

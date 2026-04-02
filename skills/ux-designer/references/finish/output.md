@@ -12,8 +12,8 @@ To communicate a design, use the <ui-spec> XML format as shown below. Use this f
 - Include all relevant states (empty, loading, error, populated) and variants (default, hover, active, etc.).
 - Use clear, explicit names for components, screens, and states.
 - Follow the skill's absolute rules and scenario/principle guidance for structure and clarity.
-- If unsure, start with [references/foundation/context.md](references/foundation/context.md) and route to the appropriate scenario and principle files.
-- See [references/finish/review.md](references/finish/review.md) for review questions to validate your design.
+- If unsure, start with [context.md](../foundation/context.md) and route to the appropriate scenario and principle files.
+- See [review.md](review.md) for review questions to validate your design.
 
 
 ## Example format

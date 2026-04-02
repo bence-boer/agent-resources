@@ -76,7 +76,7 @@ To show the command menu in a dialog, use the `<Command.Dialog />` component ins
 
 ### Combobox
 
-You can use the `<Command />` component as a combobox. See the [Combobox](/docs/components/combobox) page for more information.
+You can use the `<Command />` component as a combobox. See [Combobox](combobox.md) for more information.
 
 ## Changelog
 

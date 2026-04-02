@@ -12,7 +12,7 @@ Shad doesn't like building sidebars, so he built 30+ of them with all kinds of c
 
 We now have a solid foundation to build on top of. Composable. Themeable. Customizable.
 
-[Browse the Blocks Library](/blocks).
+Browse the Blocks Library in the upstream docs.
 
 ## Installation
 
@@ -23,7 +23,7 @@ Run the following command to install the `sidebar` components:</Step>
 
 Add the following colors to your CSS file</Step>
 
-We'll go over the colors later in the [theming section](/docs/components/sidebar#theming).
+We'll go over the colors later in the [theming section](#theming).
 
 ```css title="src/routes/layout.css"
 :root {
@@ -61,7 +61,7 @@ Copy and paste the following code into your project.
 
 Add the following colors to your CSS file</Step>
 
-We'll go over the colors later in the [theming section](/docs/components/sidebar#theming).
+We'll go over the colors later in the [theming section](#theming).
 
 ```css title="src/routes/layout.css"
 :root {

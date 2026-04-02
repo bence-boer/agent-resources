@@ -10,7 +10,7 @@ Introducing **Charts**. A collection of chart components that you can copy and p
 
 Charts are designed to look great out of the box. They work well with other components are are fully customizable to fit your project.
 
-[Browse the Charts Library](/charts)
+Browse the Charts Library in the upstream docs.
 
 ## Component
 
@@ -264,8 +264,8 @@ The `legend` prop is used to show a legend for the chart. We are working with La
 
 Done. You've built your first chart! What's next?
 
-- [Themes and Colors](/docs/components/chart#theming)
-- [Tooltip](/docs/components/chart#tooltip)
+- [Themes and Colors](#theming)
+- [Tooltip](#tooltip)
 
 ## Chart Config
 

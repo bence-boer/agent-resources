@@ -125,7 +125,7 @@ Use the `rounded-full` class to make the button rounded.
 
 ### Button Group
 
-To create a button group, use the `ButtonGroup` component. See the [Button Group](/docs/components/button-group) documentation for more details.
+To create a button group, use the `ButtonGroup` component. See [Button Group](button-group.md) for more details.
 
 ```svelte showLineNumbers
 <ButtonGroup.Root>

@@ -1,10 +1,6 @@
 ---
 name: skill-creator
-description: >
-  Create, split, rewrite, and validate standalone Markdown skills in any domain. Use for any
-  `SKILL.md` work: new skills, skill refactors, skill splits, turning docs/history/examples into a
-  skill, tightening frontmatter and descriptions, or validation and packaging. Produces concise,
-  dry, information-dense, comprehensive skills with explicit boundaries and minimal overlap.
+description: Create, split, rewrite, and validate standalone Markdown skills in any domain. Use for any `SKILL.md` work - new skills, skill refactors, skill splits, turning docs/history/examples into a skill, tightening frontmatter and descriptions, or validation and packaging. Produces concise, dry, information-dense, comprehensive skills with explicit boundaries and minimal overlap.
 ---
 
 # Skill Creator
@@ -15,7 +11,7 @@ Create standalone skills that are easy to trigger, easy to load, and hard to mis
 
 A skill is a directory containing a `SKILL.md` plus optional secondary files.
 
-```
+```text
 skill-name/
 ├── SKILL.md            # required — frontmatter + Markdown body
 ├── references/         # docs, guides, examples loaded selectively
@@ -32,6 +28,8 @@ skill-name/
 3. Secondary files — loaded on demand, only when the agent routes to them
 
 Keep the `SKILL.md` body worth loading by default. Push depth into secondary files only when it is genuinely conditional.
+
+The `description` should carry the skill's condensed purpose and activation trigger. The body should start with owned surface, routing, defaults, or operating rules instead of repeating the description as an opening purpose paragraph.
 
 ## What this skill owns
 
@@ -61,13 +59,13 @@ These properties apply both to this skill and to every skill it authors or refin
 
 ## First classify the job
 
-| If the user wants... | Do this |
-| --- | --- |
-| a new skill | choose the dominant mode, define the owned surface, then design structure before writing |
-| an existing skill improved | preserve the name, remove drift, tighten boundaries, and rewrite stale sections instead of layering on top |
-| one skill split or several skills merged | define ownership boundaries first, then decide what genuinely belongs together |
-| docs, prompts, history, or examples distilled into a skill | analyze chronologically when time matters, keep stable conclusions, and do not mirror the source blindly |
-| validation or packaging only | validate first; package only if requested |
+| If the user wants...                                       | Do this                                                                                                    |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| a new skill                                                | choose the dominant mode, define the owned surface, then design structure before writing                   |
+| an existing skill improved                                 | preserve the name, remove drift, tighten boundaries, and rewrite stale sections instead of layering on top |
+| one skill split or several skills merged                   | define ownership boundaries first, then decide what genuinely belongs together                             |
+| docs, prompts, history, or examples distilled into a skill | analyze chronologically when time matters, keep stable conclusions, and do not mirror the source blindly   |
+| validation or packaging only                               | validate first; package only if requested                                                                  |
 
 ## Then choose the dominant mode
 
@@ -79,7 +77,6 @@ Use when the skill should improve judgment across many scenarios rather than pre
 
 Root usually contains:
 
-- one-sentence purpose
 - routing order or scenario matrix
 - short principles, questions, or decision lenses
 - finish or self-review criteria
@@ -96,7 +93,6 @@ This mode also covers builder or process skills such as skill creation, reportin
 
 Root usually contains:
 
-- one-sentence purpose
 - what the skill owns and what it does not own
 - routing by task or surface if needed
 - defaults, rules, thresholds, process steps, or output expectations
@@ -111,7 +107,6 @@ Use when the main job is to make a large knowledge base, manual, catalog, or ext
 
 Root usually contains:
 
-- one-sentence purpose
 - key facts that change how the source should be read
 - a routing matrix, index, or topic map
 - local conventions or caveats
@@ -124,10 +119,9 @@ Avoid rewriting the whole source into prose or leaving a raw dump with no naviga
 
 `SKILL.md` should always contain:
 
-- what the skill is for
-- when to use it
 - the globally relevant rules
 - the dominant mode and boundaries
+- the owned surface and non-goals when relevant
 - how to route deeper
 - how to finish or validate
 
@@ -148,7 +142,7 @@ One concern per secondary file. Do not split just to chase smaller files; split 
 
 Every skill must stand on its own, even if it has a complement elsewhere.
 
-- explain the skill's purpose, owned surface, and non-goals inside the skill itself
+- explain the skill's owned surface, non-goals, and routing inside the skill itself; rely on the `description` for the condensed purpose and activation trigger
 - never link to skills or assets outside the skill's own folder
 - if adjacent surfaces matter, describe the boundary generically instead of pointing outside the folder
 - split one skill into several only when the user should make a meaningful choice before loading detail
@@ -161,9 +155,14 @@ Every skill must stand on its own, even if it has a complement elsewhere.
 - If the source spans time, analyze it in chronological order and let later stable guidance override earlier obsolete guidance.
 - If a stable default exists, state it.
 - If several valid paths exist, use the smallest useful routing matrix or question set.
+- Use proper markdown file links with destinations relative to the file that contains the link when referring readers to another local skill file: `references/file.md` from the root skill file, `../foundation/context.md` from a nested reference file, or `review.md` for a sibling file.
+- Do not leave internal navigation references as bare paths or wrapped only in backticks such as `file.md` or `references/file.md`.
+- Do not use site-root or repo-root destinations like `/docs/...` or `/skills/...` for local skill files.
+- Do not link to directories. If you need to mention a folder such as `references/principles/`, name it in prose instead.
 - Use examples only when they remove ambiguity faster than prose; keep them short and representative.
 - If examples start carrying the real rules, move those rules into the instructions.
 - Do not make every skill sound like a thinking skill if the user actually needs defaults or reference routing.
+- Do not open the body with a purpose paragraph that merely repeats the `description`.
 - Do not repeat the same guidance in the root and in secondary files.
 - Do not repeat the same guidance across sibling skills unless local repetition prevents a likely misuse.
 
@@ -172,8 +171,9 @@ Every skill must stand on its own, even if it has a complement elsewhere.
 The `description` field is the skill's discovery surface. It should:
 
 1. name the capability in concrete terms
-2. say when to use the skill
-3. differentiate it from nearby skills only when that prevents overlap or misfires
+2. condense the skill's purpose into one or two factual clauses
+3. say when to use the skill
+4. differentiate it from nearby skills only when that prevents overlap or misfires
 
 Bad descriptions are generic, vague, or keyword-stuffed. Good descriptions are capability-first and trigger-rich.
 
@@ -181,9 +181,9 @@ Bad descriptions are generic, vague, or keyword-stuffed. Good descriptions are c
 
 Use these as starting patterns.
 
-- Thinking skill root: purpose -> routing order -> core questions or principles -> scenario matrix if needed -> finish review
-- Prescriptive skill root: purpose -> what it owns -> non-goals if needed -> routing by task or surface -> defaults or workflow -> output expectations
-- Reference skill root: purpose -> key facts -> routing matrix or index -> local conventions or caveats
+- Thinking skill root: routing order -> core questions or principles -> scenario matrix if needed -> finish review
+- Prescriptive skill root: what it owns -> non-goals if needed -> routing by task or surface -> defaults or workflow -> output expectations
+- Reference skill root: key facts -> routing matrix or index -> local conventions or caveats
 
 If a skill mixes modes, the root should still read clearly as one of the three shapes above.
 
@@ -214,6 +214,6 @@ Before handing the skill back:
 3. Check that the root `SKILL.md` is worth loading by default and contains all globally relevant rules.
 4. Check that the skill is standalone and does not reference anything outside its own folder.
 5. Check that overlap is minimal and no important user requirement was lost during distillation.
-6. Check that every referenced file path resolves.
+6. Check that every referenced file path resolves from the file that contains the link.
 7. If the user wants an installable artifact, run `python -m scripts.package_skill <path/to/skill-folder>`.
 8. Report the final skill path and packaged `.skill` path if one was created.

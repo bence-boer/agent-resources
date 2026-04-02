@@ -42,6 +42,6 @@ links:
 
 You can use the `<Table />` component to build more complex data tables. Combine it with [@tanstack/table](https://tanstack.com/table) to create tables with sorting, filtering and pagination.
 
-See the [Data Table](/docs/components/data-table) documentation for more information.
+See [Data Table](data-table.md) for more information.
 
-You can also see an example of a data table in the [Tasks](/examples/tasks) demo.
+You can also see an example of a data table in the upstream Tasks demo.

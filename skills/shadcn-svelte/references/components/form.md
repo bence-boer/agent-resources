@@ -26,7 +26,7 @@ The `Form` components offered by `shadcn-svelte` are wrappers around `formsnap` 
 - Form field components for scoping form state.
 - Form validation using [Zod](https://zod.dev) or any other validation library supported by [Superforms](https://superforms.rocks).
 - Applies the correct `aria` attributes to form fields based on states.
-- Enables you to easily use various components like [Select](/docs/components/select), [RadioGroup](/docs/components/radio-group), [Switch](/docs/components/switch), [Checkbox](/docs/components/checkbox) and other form components with forms.
+- Enables you to easily use various components like [Select](select.md), [RadioGroup](radio-group.md), [Switch](switch.md), [Checkbox](checkbox.md) and other form components with forms.
 
 If you aren't familiar with [Superforms](https://superforms.rocks) & [Formsnap](https://formsnap.dev), you should check out their documentation first, as this guide assumes you have a basic understanding of how they work together.
 
@@ -194,10 +194,10 @@ Be sure to check out the [Formsnap](https://formsnap.dev) and [Superforms](https
 
 See the following links for more examples on how to use the other `Form` components:
 
-- [Checkbox](/docs/components/checkbox#form)
-- [Date Picker](/docs/components/date-picker#form)
-- [Input](/docs/components/input#form)
-- [Radio Group](/docs/components/radio-group#form)
-- [Select](/docs/components/select#form)
-- [Switch](/docs/components/switch#form)
-- [Textarea](/docs/components/textarea#form)
+- [Checkbox](checkbox.md)
+- [Date Picker](date-picker.md)
+- [Input](input.md)
+- [Radio Group](radio-group.md)
+- [Select](select.md)
+- [Switch](switch.md)
+- [Textarea](textarea.md)
