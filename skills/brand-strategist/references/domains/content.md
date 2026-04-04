@@ -41,7 +41,7 @@ Six drivers of social sharing and virality — viral content is engineered, not 
 
 Design content to activate at least 2-3 STEPPS principles simultaneously.
 
-## Content Marketing Best Practices
+## Content Marketing Execution Rules
 
 - **Psychographic over demographic** — target by values, lifestyle, and pain points, not just age/income.
 - **Original research wins** — proprietary reports and data establish dominant authority.

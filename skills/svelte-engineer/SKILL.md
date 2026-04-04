@@ -6,7 +6,7 @@ description: >
   or typed component utilities; when migrating Svelte 4 patterns to Svelte 5; or when
   splitting, extracting, and refining Svelte files to match an existing architecture. Do not
   use for broad app architecture, route-group strategy, dependency selection, or structural
-  audits; use svelte-architect for those.
+  audits; those are architecture-level decisions.
 ---
 
 # Svelte 5 Engineer
@@ -29,7 +29,7 @@ Do not use this skill to:
 - choose the stack unless the project has already standardized it
 - invent new global patterns when a local implementation decision will solve the task
 
-If architecture is genuinely undecided and blocks the work, pause and route to [svelte-architect](../svelte-architect/SKILL.md). Ask for the missing handoff items explicitly: route/group placement, state ownership, data boundary, approved dependencies, and required UX states.
+If architecture is genuinely undecided and blocks the work, pause and route to the architecture-level skill. Ask for the missing handoff items explicitly: route/group placement, state ownership, data boundary, approved dependencies, and required UX states.
 
 ## Reference routing
 
@@ -40,6 +40,23 @@ Read only what matches the change surface.
 - routes, loads, actions, hooks, or invalidation -> [sveltekit-patterns](references/sveltekit-patterns.md)
 - typing, schemas, or frontend/backend contracts -> [typescript-patterns](references/typescript-patterns.md)
 - migration or review of old code -> [anti-patterns](references/anti-patterns.md)
+
+## Expert vocabulary
+
+- **Rune system**: `$props()`, `$derived`, `$state`, `$effect`, `$bindable`, `$inspect`, rune, fine-grained reactivity
+- **Component surface**: snippet, `{@render}`, `data-slot`, class prop, `cn()` (clsx + twMerge), `tv()` (tailwind-variants, Joe Bell), bits-ui, Formsnap
+- **SvelteKit data flow**: `+page.server.ts`, `+layout.server.ts`, load function, actions, `use:enhance`, `invalidate`, `depends`, `$app/state`
+- **Styling / variants**: tailwind-variants, clsx + twMerge, CSS custom properties, Tailwind v4, `@utility`, `@custom-variant`
+- **Migration**: Svelte 4→5, `export let` → `$props()`, stores → runes, `<slot>` → snippet, `$app/stores` → `$app/state`
+
+## Anti-pattern watchlist
+
+1. **Effect-for-derivation** — using `$effect` to assign a `$state` variable when `$derived` would suffice. Detection: `$effect` body contains an assignment whose value depends only on other reactive values. Fix: replace with `$derived` or `$derived.by`.
+2. **Premature global state** — reaching for a module-level singleton or global store when page-local Context or component state would suffice. Fix: keep state at the narrowest scope; use Context for compound component subtrees.
+3. **God component** — component over ~150 lines mixing layout, logic, and data fetching. Fix: split into page + feature component + `.svelte.ts` handler.
+4. **Prop drilling through wrappers** — passing props through intermediate wrapper components instead of using the Context API. Fix: introduce a Context at the compound root.
+5. **Store-in-component** — defining shared reactive state inside a `.svelte` file instead of a `.svelte.ts` module. Fix: extract to a colocated `.svelte.ts` file so the state is importable and testable.
+6. **Missing type imports** — using `import { X }` for types instead of `import type { X }` with `verbatimModuleSyntax` enabled. Fix: use `import type` for pure types; keep value imports for enums, const maps, and runtime helpers.
 
 ## File placement defaults
 
@@ -178,3 +195,84 @@ When implementing, be concrete:
 - keep ownership boundaries explicit
 - avoid widening the abstraction surface unless the task really needs it
 - if an architectural gap blocks implementation, name the exact missing decision instead of asking for a broad re-plan
+
+## Examples
+
+### BAD: $effect computing derived state
+
+```ts
+// ❌ effect-for-derivation
+let full_name = $state('');
+$effect(() => {
+  full_name = `${first_name} ${last_name}`;
+});
+```
+
+```ts
+// ✅ $derived replaces both the $state and the $effect
+const full_name = $derived(`${first_name} ${last_name}`);
+```
+
+### BAD: God component with mixed concerns
+
+```svelte
+<!-- ❌ 200+ line page mixing server data, client workflows, and layout -->
+<script lang="ts">
+  let { data }: PageProps = $props();
+  let items = $state<Item[]>([]);
+  let is_loading = $state(false);
+  // ... 40 lines of fetch/optimistic-update logic ...
+</script>
+<!-- ... 100+ lines of mixed layout and feature markup ... -->
+```
+
+```text
+✅ Split into three files:
+  +page.svelte        — thin orchestrator, renders feature components
+  page.svelte.ts      — ItemPageHandler class with client workflow state
+  components/item-list.svelte — presentational component for the list
+```
+
+### BAD: Global singleton for page-local state
+
+```ts
+// ❌ premature-global — module-level singleton used by one page
+// stores/dashboard.svelte.ts
+class DashboardStore {
+  filter = $state('all');
+}
+export const dashboard_store = new DashboardStore();
+```
+
+```ts
+// ✅ Page-scoped Context — state lives and dies with the page
+// routes/dashboard/dashboard-context.svelte.ts
+import { setContext, getContext } from 'svelte';
+
+const DASHBOARD_KEY = Symbol('dashboard');
+
+class DashboardState {
+  filter = $state('all');
+}
+
+export function set_dashboard_context() {
+  return setContext(DASHBOARD_KEY, new DashboardState());
+}
+
+export function use_dashboard_context() {
+  return getContext<DashboardState>(DASHBOARD_KEY);
+}
+```
+
+## Questions this skill answers
+
+- "Create a Svelte 5 component"
+- "Implement this page with SvelteKit"
+- "Migrate this component from Svelte 4 to Svelte 5"
+- "Write a load function for this route"
+- "Split this large component into smaller pieces"
+- "How do I use runes in a .svelte.ts file?"
+- "Add a form action to this page"
+- "Extract reusable logic from this component"
+- "Set up Context for this compound component"
+- "Wire up typed props and callbacks"

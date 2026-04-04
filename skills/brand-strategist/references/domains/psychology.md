@@ -7,7 +7,7 @@ How humans actually make purchasing decisions, and the ethical levers that reduc
 - **System 1** — fast, automatic, heuristic-driven, emotional. Dominates most purchasing decisions.
 - **System 2** — slow, deliberate, analytical. Engaged for high-stakes or novel decisions.
 
-Brand strategy should align with System 1 by default: reduce friction, leverage familiarity, lead with emotion. Reserve System 2 appeals (data, specs, comparisons) for high-consideration purchases.
+Brand strategy should align with System 1 by default: reduce friction, use established familiarity, lead with emotion. Reserve System 2 appeals (data, specs, comparisons) for high-consideration purchases.
 
 ## Key Cognitive Biases
 

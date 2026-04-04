@@ -14,9 +14,9 @@ Any design involves clickable/tappable elements, input fields, drag operations, 
 
 ## Rules
 
-- Touch targets: minimum 44×44px. Spacing between adjacent targets: minimum 8px. Frequently used targets should be larger, not smaller.
+- Beyond the 44×44px minimum (see Absolute Rules in [SKILL.md](../../SKILL.md)), space adjacent targets by at least 8px. Frequently used targets should be larger, not smaller.
 - Place high-frequency actions in easy-reach zones (thumb zones on mobile, center-left on desktop). Destructive actions require deliberate reach.
-- System feedback must appear within 400ms of user action. For operations exceeding 1 second, show a progress indicator. For operations exceeding 10 seconds, show elapsed time or estimated remaining time.
+- Beyond the 400ms feedback threshold (see Absolute Rules in [SKILL.md](../../SKILL.md)), operations exceeding 1 second need a progress indicator. Operations exceeding 10 seconds need elapsed time or estimated remaining time.
 - Immediate actions (toggle, select, navigate) must produce instant visual change. Async actions (save, submit, fetch) must show pending state immediately, result when complete.
 - Never trigger destructive, irreversible, or high-impact actions on a single unconfirmed click. Require either confirmation, undo window, or a two-step interaction.
 - Animations must serve function: guide attention, show spatial relationships, indicate state change. Decorative animation without informational purpose is noise. Respect `prefers-reduced-motion`.

@@ -29,15 +29,7 @@ Look for:
 - client-side data orchestration compensating for a missing server boundary
 - Context used as a substitute for application architecture
 
-Default recommendation hierarchy:
-
-1. local state
-2. page state
-3. Context
-4. layout-shared state
-5. global singleton
-
-If the codebase skips several levels routinely, investigate why.
+Apply the state scope hierarchy from the root skill. If the codebase skips several levels routinely, investigate why.
 
 ## 3. Component system boundaries
 
@@ -58,17 +50,7 @@ Common failure modes:
 
 ## 4. UX completeness
 
-Architecture review is not complete until critical journeys are checked for:
-
-- loading behavior
-- empty states
-- expected failures
-- unauthorized flows
-- success transitions
-- responsive behavior
-- accessibility boundaries
-
-A codebase can look structurally tidy and still be architecturally weak if these states are bolted on inconsistently.
+Apply the UX completeness checklist from the root skill to every critical journey under review. A codebase can look structurally tidy and still be architecturally weak if these states are bolted on inconsistently.
 
 ## 5. Dependency and stack discipline
 

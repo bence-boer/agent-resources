@@ -53,4 +53,4 @@ This transforms a standard delivery into a ceremonial event that cements loyalty
 | Scalability | High — independent of any individual | Limited by individual's time |
 | Trust mechanism | Institutional credibility | Authentic human connection |
 
-These are synergistic: a strong personal brand (podcasts, thought leadership, speaking) humanizes the corporate entity, while the corporate brand gives the individual institutional credibility and reach. Integrate both deliberately.
+These are complementary: a strong personal brand (podcasts, subject-matter authority content, speaking) humanizes the corporate entity, while the corporate brand gives the individual institutional credibility and reach. Integrate both deliberately.

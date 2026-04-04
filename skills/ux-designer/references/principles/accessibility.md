@@ -15,7 +15,7 @@ Every design task. Always consult this file alongside other principles.
 ## Rules
 
 - Color contrast: minimum 4.5:1 for normal text, 3:1 for large text (≥18px or ≥14px bold), and 3:1 for interactive component boundaries and meaningful graphics.
-- Never use color as the sole indicator. Pair with icon, shape, text label, pattern, or position change. (e.g., error: red + icon + text; success: green + checkmark + text)
+- Beyond the no-color-alone rule (see Absolute Rules in [SKILL.md](../../SKILL.md)), pair every color signal with at least two redundant cues: icon, shape, text label, pattern, or position change. (e.g., error: red + icon + text; success: green + checkmark + text)
 - Every interactive element must be operable by keyboard alone. Tab order follows visual reading order. Focus indicator is always visible.
 - Images that convey information: descriptive alt text. Decorative images: empty alt (`alt=""`). Complex visuals (charts, diagrams): extended description or data table.
 - Form inputs must have associated labels (not just placeholders). Error messages must be programmatically linked to their fields (`aria-describedby`).

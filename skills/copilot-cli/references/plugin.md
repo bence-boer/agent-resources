@@ -69,5 +69,5 @@ Manage plugin marketplaces.
 Commands:
 - `add [options] <source>` - Add a marketplace
 - `remove [options] <name>` - Remove a marketplace
-- `list [options>` - List registered marketplaces
+- `list [options]` - List registered marketplaces
 - `browse [options] <name>` - Browse plugins in a marketplace

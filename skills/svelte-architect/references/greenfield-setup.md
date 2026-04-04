@@ -48,15 +48,7 @@ Group shared components by function, not by page. If a component only serves one
 
 ## 4. Plan state before creating stores
 
-Default order of ownership:
-
-1. local component state
-2. page-local state
-3. subtree Context
-4. route-layout shared state
-5. global singleton
-
-A new app rarely needs more than a few true globals on day one. If a proposed global state item is really just route data, keep it on the server instead.
+Apply the state scope hierarchy from the root skill — start with the most local scope and escalate only with evidence. A new app rarely needs more than a few true globals on day one. If a proposed global state item is really just route data, keep it on the server instead.
 
 ## 5. Choose a minimal primitive inventory
 
@@ -76,16 +68,7 @@ Add new primitives only when a second feature needs them or a consistency proble
 
 ## 6. Make UX states part of the structure
 
-Each planned feature should have an obvious place for:
-
-- loading
-- empty
-- expected failure
-- unauthorized / forbidden
-- optimistic or success feedback
-- mobile layout behavior
-
-If these states have nowhere natural to live, the feature boundary is not ready.
+Apply the UX completeness checklist from the root skill to each planned feature. If these states have nowhere natural to live, the feature boundary is not ready.
 
 ## 7. Lock in quality gates early
 

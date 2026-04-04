@@ -205,35 +205,3 @@ const doubled = $derived(count * 2);
 // ✅ Use SvelteKit load functions in +page.server.ts
 ```
 
-## Page Handler Pattern
-
-```ts
-// routes/todos/page.svelte.ts
-class TodoPageHandler {
-  todo_list = $state<Todo[]>([]);
-  new_title = $state('');
-  is_loading = $state(false);
-  error_message = $state<string | null>(null);
-
-  async load_todos() {
-    this.is_loading = true;
-    try {
-      const response = await client.api.todos.$get();
-      this.todo_list = await response.json();
-    } catch (caught_error) {
-      this.error_message = caught_error instanceof Error ? caught_error.message : 'Failed to load';
-    } finally {
-      this.is_loading = false;
-    }
-  }
-
-  async add_todo() {
-    if (!this.new_title.trim()) return;
-    await client.api.todos.$post({ json: { title: this.new_title } });
-    this.new_title = '';
-    await this.load_todos();
-  }
-}
-
-export const todo_handler = new TodoPageHandler();
-```

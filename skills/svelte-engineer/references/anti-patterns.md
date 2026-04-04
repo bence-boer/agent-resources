@@ -152,37 +152,6 @@ export const count_store = new CountStore();
 | `createEventDispatcher` from `svelte` | Callback props |
 | `page` from `$app/stores` | `page` from `$app/state` |
 
-### Nested Conditionals → Guard Clauses
-
-```ts
-// ❌
-const scroll_to = (index: number) => {
-  if (carousel_element) {
-    carousel_element.scroll(index * carousel_width, 0);
-    current_item_index = index;
-  }
-};
-
-// ✅
-const scroll_to = (index: number) => {
-  if (!carousel_element) return;
-
-  carousel_element.scroll(index * carousel_width, 0);
-  current_item_index = index;
-};
-```
-
-### Unnecessary Intermediate Variables → Inline
-
-```ts
-// ❌
-const html2pdf_module = await import('html2pdf.js');
-const html2pdf = html2pdf_module.default;
-
-// ✅
-const html2pdf = (await import('html2pdf.js')).default;
-```
-
 ### Template String Classes → `cn()`
 
 ```svelte
@@ -225,8 +194,6 @@ import { ButtonVariant } from './button-variant.ts';
 export { ButtonVariant };
 ```
 
-Use `type` only for true types. Enums, const maps, and variant helpers are runtime values.
-
 ### Closed String Domains → Enums
 
 ```ts
@@ -246,8 +213,6 @@ enum ButtonSize {
   LG = 'lg',
 }
 ```
-
-Use enums for closed runtime sets such as variants, sizes, modes, statuses, and sort directions.
 
 ### Instance-Script Variant Helpers → Module-Script Exports
 

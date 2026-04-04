@@ -84,60 +84,7 @@ Group: external packages first (alphabetical), then internal imports (alphabetic
 
 ## Security
 
-### Manual JWT Decoding → `getUser()`
-
-```ts
-// ❌ — bypasses signature verification, trivially forgeable
-const base64 = auth_token.split('-')[1];
-const session = JSON.parse(atob(base64));
-
-// ✅ — validates JWT signature server-side
-const { data: { user }, error } = await context.var.supabase.auth.getUser();
-if (error || !user) return context.json({ message: 'Unauthorized' }, 401);
-```
-
-### Non-Null Assertions on User → Auth Guard Middleware
-
-```ts
-// ❌ — crashes with TypeError if session is null
-const user_id = session(context)!.user.id;
-
-// ✅ — auth_guard guarantees user exists on context
-const user_id = context.var.user.id;
-```
-
-### Raw Error Forwarding → Sanitized Errors
-
-```ts
-// ❌ — leaks table names, RLS details, internal structure
-throw new HTTPException(500, { message: 'Failed', cause: supabase_error });
-
-// ✅ — log server-side, return sanitized message
-context.var.logger.error({ error: supabase_error }, 'Failed to fetch expenses');
-throw new HTTPException(500, { message: 'Failed to fetch expenses' });
-```
-
-### Module-Level Supabase Client → Per-Request Injection
-
-```ts
-// ❌ — shares state across requests, breaks cookie-based auth
-const supabase = createServerClient(url, key);
-
-app.get('/items', async (context) => {
-  const { data } = await supabase.from('items').select();
-});
-
-// ✅ — fresh client per request with cookie forwarding
-const supabase_middleware = (): MiddlewareHandler => {
-  return async (context, next) => {
-    const client = createServerClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-      cookies: { /* cookie handlers from request */ },
-    });
-    context.set('supabase', client);
-    await next();
-  };
-};
-```
+Security anti-patterns with full BAD/GOOD examples are in [security-patterns.md](../security-patterns.md). Key violations: manual JWT decoding, raw error forwarding, module-level Supabase client, non-null assertions on user.
 
 ## Code Style
 
@@ -196,40 +143,4 @@ const config = {
 const config = { port: 8000, host: 'localhost' } satisfies ServerConfig;
 ```
 
-### Duplicated Types → Zod Inference
-
-```ts
-// ❌ — types drift from validation
-const expense_schema = z.object({ amount: z.number(), description: z.string() });
-interface Expense { amount: number; description: string; }
-
-// ✅ — single source of truth
-const expense_schema = z.object({ amount: z.number(), description: z.string() });
-type Expense = z.infer<typeof expense_schema>;
-```
-
-### Inline Validation → Edge Validation via Route Schemas
-
-```ts
-// ❌ — validation mixed into handler
-export const create = async (context: Context) => {
-  const body = await context.req.json();
-  if (!body.amount || typeof body.amount !== 'number') {
-    return context.json({ error: 'Invalid amount' }, 400);
-  }
-  // ... business logic
-};
-
-// ✅ — Zod validates at route definition, handler receives typed data
-export const create_route = createRoute({
-  method: 'post',
-  path: '/expenses',
-  request: { body: json_content_required(insert_expense_schema, 'New expense') },
-  responses: { ... },
-});
-
-export const create: AppRouteHandler<CreateRoute> = async (context) => {
-  const expense = context.req.valid('json'); // Already validated and typed
-  // ... business logic
-};
-```
+Type inference and edge validation patterns with full BAD/GOOD examples are in [typescript-patterns.md](../typescript-patterns.md). Key rules: infer types from Zod schemas with `z.infer<>`, validate at route definition not in handlers.

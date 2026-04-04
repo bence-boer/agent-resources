@@ -10,7 +10,7 @@ How to structure a portfolio when the organization operates multiple brands:
 | --- | --- | --- | --- |
 | Branded House | Single master brand across all products (Google Maps, FedEx Ground) | Maximum efficiency; unified reach; instant trust transfer to new products | High risk: damage to one product infects the entire portfolio |
 | House of Brands | Independent brands under an invisible parent (P&G, Unilever) | Low risk; isolated impact; precise targeting of diverse segments | Massive investment; limited cross-brand efficiency |
-| Hybrid | Mix of master extensions and independent entities (Coca-Cola, Salesforce) | Leverages parent equity where useful; protects niche brands | Confusing governance; potential brand cannibalization |
+| Hybrid | Mix of master extensions and independent entities (Coca-Cola, Salesforce) | Applies parent equity where useful; protects niche brands | Confusing governance; potential brand cannibalization |
 | Endorsed Brand | Independent brands backed by parent credibility (Courtyard by Marriott) | Balances independent personality with institutional trust | Requires careful hierarchy management |
 
 Choose the model before launching additional brands. Retrofitting architecture is expensive and disruptive.
@@ -71,7 +71,7 @@ Regular evaluation to prevent relevance decay:
 ### Execution
 
 - [ ] Content distributed via strategic channels
-- [ ] Social media leveraged for anticipation (progressive reveals)
+- [ ] Social media channels activated for anticipation (progressive reveals)
 - [ ] Digital ads launched with verified UTM parameters for attribution
 - [ ] Performance data collection active for iterative optimization
 

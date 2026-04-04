@@ -6,11 +6,22 @@ description: >
   demands the canonical solution, not just a working one. Scenario-based and modular: route through
   the relevant foundation, scenario, and domain files to reason about invariants, state integrity,
   validation, type design, failure modes, testing, architecture, complexity, and security.
+  Do NOT use for routine code-review feedback, style enforcement, or pure architecture planning
+  without implementation.
 ---
 
 # Meta Engineer
 
-Provides a structured thinking framework for applying engineering rigor to software development. SELECT AND ALWAYS STRICTLY FOLLOW all relevant modules: begin with the foundation files below, choose one primary scenario, add only the domains that materially apply. Finish with self-review.
+SELECT AND ALWAYS STRICTLY FOLLOW all relevant modules: begin with the foundation files below, choose one primary scenario, add only the domains that materially apply. Finish with self-review.
+
+## Routing order
+
+1. Always start with [foundation/core.md](foundation/core.md), [foundation/ownership.md](foundation/ownership.md), and [foundation/validation.md](foundation/validation.md).
+2. Add [foundation/scope.md](foundation/scope.md) if boundaries are fuzzy.
+3. Add [foundation/constraints.md](foundation/constraints.md) if compatibility, safety, scale, or rollout limits materially shape the solution.
+4. Pick one primary scenario from the matrix below.
+5. Add only the domain files that apply. Scenario files tell you which ones usually matter.
+6. Always finish with [finish/self-review.md](finish/self-review.md). Add [finish/handoff.md](finish/handoff.md) if another person or agent continues the work.
 
 ## Core principles
 
@@ -21,28 +32,9 @@ Provides a structured thinking framework for applying engineering rigor to softw
 - Restrict by default. Open only the inputs, states, and permissions the design truly needs.
 - Keep a single source of truth. Derive; do not duplicate.
 - Abstract, do not merely extract. A good abstraction captures a stable rule and prevents misuse.
-- Everything earns its place. Delete dead code, vestigial parameters, and speculative structure.
-
-## Operating stance
-
-- Solve the underlying problem at the right level. Patch one instance only if the broader failure class truly cannot be removed.
-- Make state explicit. Prefer one source of truth, explicit transitions, and representations that make invalid states hard or impossible.
-- Push validation earlier. Validate at the boundary, trust inside, and keep runtime checks for what genuinely cannot be known sooner.
-- Keep reasoning local. Each function, module, and component should be understandable without reconstructing the whole system.
-- Keep abstractions restrictive. A good API should remove misuse opportunities, not export them.
-- Treat every dependency and every boundary input as suspect until validated.
+- Treat every dependency and boundary input as suspect until validated.
 - Preserve behavior intentionally. If a contract must change, change it explicitly and validate all consumers.
-- Prove important claims. Every material claim should have static, test, runtime, or operational evidence.
-- If something cannot be decided from facts, surface the decision explicitly before coding.
-
-## Routing order
-
-1. Always start with [foundation/core.md](foundation/core.md), [foundation/ownership.md](foundation/ownership.md), and [foundation/validation.md](foundation/validation.md).
-2. Add [foundation/scope.md](foundation/scope.md) if boundaries are fuzzy.
-3. Add [foundation/constraints.md](foundation/constraints.md) if compatibility, safety, scale, or rollout limits materially shape the solution.
-4. Pick one primary scenario from the matrix below.
-5. Add only the domain files that apply. Scenario files tell you which ones usually matter.
-6. Always finish with [finish/self-review.md](finish/self-review.md). Add [finish/handoff.md](finish/handoff.md) if another person or agent continues the work.
+- Surface undecidable choices. If something cannot be decided from facts, surface the decision explicitly before coding.
 
 ## Scenario routing matrix
 
@@ -61,7 +53,15 @@ Provides a structured thinking framework for applying engineering rigor to softw
 
 All domain files live under the `domains/` folder. Read narrowly, but do not stop early.
 
-## Working rule
+## Questions this skill answers
 
-Read narrowly. Model explicitly. State the invariant. Enumerate valid and invalid states. Prove each
-material claim. Search sibling paths and failure surfaces, not only the named case.
+- "Review this implementation for correctness"
+- "What could go wrong with this change?"
+- "Help me think through this feature's edge cases"
+- "Audit this code for reliability"
+- "What invariants should I maintain?"
+- "Is this refactor safe?"
+- "Review the error handling in this module"
+- "What's the right abstraction here?"
+- "Think through the failure modes"
+- "How should I validate this input?"

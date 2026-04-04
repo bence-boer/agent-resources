@@ -153,8 +153,6 @@ export {
 import { Button, ButtonVariant } from '$lib/components/ui';
 ```
 
-Use `type` only for true types. Enums, const maps, and variant helpers are runtime values and stay value exports.
-
 ## Wrapping Headless Primitives (bits-ui)
 
 ```svelte
@@ -232,15 +230,6 @@ type WithChild<Props, Element = HTMLElement> = Props & {
 type WithoutChild<Props> = Props & { children?: Snippet };
 ```
 
-## WithElementRef Type
-
-```ts
-type WithElementRef<
-  BaseProps extends HTMLAttributes<HTMLElement>,
-  Element extends HTMLElement = HTMLElement,
-> = BaseProps & { ref?: Element | null };
-```
-
 ## CSS Class Merging
 
 Always use `cn()` = `twMerge(clsx(...))`, `class_name` last. **Never** use template string interpolation for classes — always compose with `cn()`:
@@ -270,34 +259,3 @@ Keep long Tailwind lists readable:
 @custom-variant data-open (&[data-state=open]);
 ```
 
-## MaybeGetter Pattern
-
-```ts
-type Getter<ValueType> = () => ValueType;
-type MaybeGetter<ValueType> = ValueType | Getter<ValueType>;
-
-function extract<ValueType>(value: MaybeGetter<ValueType>): ValueType {
-  return typeof value === 'function' ? (value as Getter<ValueType>)() : value;
-}
-```
-
-Usage in a utility:
-
-```ts
-// use-debounce.svelte.ts
-export class UseDebounce<ValueType> {
-  #current_value: ValueType = $state()!;
-  #timeout_handle: ReturnType<typeof setTimeout> | undefined;
-
-  constructor(getter: MaybeGetter<ValueType>, delay_ms: MaybeGetter<number> = 250) {
-    $effect(() => {
-      const new_value = extract(getter);
-      const delay = extract(delay_ms);
-      clearTimeout(this.#timeout_handle);
-      this.#timeout_handle = setTimeout(() => { this.#current_value = new_value; }, delay);
-    });
-  }
-
-  get current(): ValueType { return this.#current_value; }
-}
-```

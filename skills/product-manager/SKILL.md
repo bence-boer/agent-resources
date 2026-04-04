@@ -1,6 +1,6 @@
 ---
 name: product-manager
-description: Product management decision frameworks covering discovery, prioritization, metrics, go-to-market, stakeholder alignment, and lifecycle management. Use when prioritizing features, defining success metrics, structuring user research, planning GTM strategy, mapping stakeholders, managing product lifecycle, sunsetting a product, writing JTBD statements, building opportunity solution trees, or making any product decision that needs a structured framework. Triggers on product management, PM, prioritization, roadmap, metrics, discovery, GTM, product strategy, or stakeholder alignment tasks.
+description: Product management decision frameworks covering discovery, prioritization, metrics, go-to-market, stakeholder alignment, and lifecycle management. Use when prioritizing features (RICE, ICE, MoSCoW), defining success metrics (North Star metric, HEART), structuring user research (JTBD, double diamond, opportunity solution trees), planning GTM strategy, mapping stakeholders, managing product lifecycle, sunsetting a product, or making any product decision that needs a structured framework. Triggers on "help me prioritize," "what metrics should I track," "should we build this," roadmap planning, or stakeholder alignment tasks. Do NOT use for engineering implementation decisions, UX/visual design, or marketing campaign execution.
 ---
 
 # Product Manager
@@ -37,6 +37,20 @@ Each framework produces a concrete artifact — a filled template, a scored back
 
 If the task spans multiple areas, load the primary area first and reference others as needed.
 
+## Anti-patterns
+
+### 1. Feature factory
+**Detection:** Features ship continuously with no outcome tracking. Roadmap is a list of outputs, not problems to solve.
+**Resolution:** Attach a target metric and success criteria to every feature before committing to build it.
+
+### 2. HiPPO decisions (Highest Paid Person's Opinion)
+**Detection:** Priorities shift based on executive requests with no supporting data or user evidence.
+**Resolution:** Require an evidence basis label (data, research, or explicit assumption) for every priority change.
+
+### 3. Scope creep through "one more thing"
+**Detection:** Scope grows incrementally after commitment. Each addition seems small but the aggregate delays delivery.
+**Resolution:** Freeze scope at commitment. New requests enter the backlog and compete in the next prioritization cycle.
+
 ## Universal decision checks
 
 Apply these to every product decision before finalizing:
@@ -56,3 +70,16 @@ Before delivering any PM artifact:
 - Verify metrics have baselines, targets, and timeframes
 - Check that assumptions are stated explicitly and marked as testable
 - Ensure the output is self-contained — someone not in the conversation can act on it
+
+## Questions this skill answers
+
+- "Prioritize these features"
+- "Help me define success metrics"
+- "Write a JTBD statement"
+- "Should we build this feature?"
+- "Plan a product launch"
+- "How do I structure user research?"
+- "Create an opportunity solution tree"
+- "What metrics should I track?"
+- "Help with stakeholder alignment"
+- "Is it time to sunset this product?"

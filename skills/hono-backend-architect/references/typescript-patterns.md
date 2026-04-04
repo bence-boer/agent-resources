@@ -1,28 +1,5 @@
 # TypeScript Patterns
 
-## Type-Safe Environment Config
-
-Validate env vars at startup with Zod — fail fast on misconfiguration:
-
-```ts
-// env.ts
-import { z } from 'zod';
-
-const env_schema = z.object({
-  SUPABASE_URL: z.string().url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  CORS_ORIGIN: z.string().url(),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(8000),
-});
-
-export const env = env_schema.parse(process.env);
-export type Env = z.infer<typeof env_schema>;
-```
-
-Never duplicate env types manually — always infer from the schema.
-
 ## AppBindings & Type-Safe Context
 
 Define a single `AppBindings` interface for all typed context variables:
@@ -217,32 +194,6 @@ async function paginate<RowType>(
 ): Promise<PaginatedResult<RowType>> { ... }
 ```
 
-## Barrel Exports
-
-Every feature module exports via an index file with named exports only:
-
-```ts
-// routes/expenses/expenses.index.ts
-export { expense_router } from './expenses.router.js';
-export { expense_schema, insert_expense_schema, type Expense } from './expenses.schemas.js';
-```
-
-```ts
-// routes/index.ts — re-exports all feature routers
-export { expense_router } from './expenses/expenses.index.js';
-export { auth_router } from './auth/auth.index.js';
-```
-
-Never use default exports:
-
-```ts
-// ❌
-export default router;
-
-// ✅
-export { router as expense_router };
-```
-
 ## Strict TypeScript Config
 
 ```json
@@ -290,8 +241,6 @@ const response = await api_client.api.expenses.$get({
 });
 const expenses = await response.json(); // Typed as Expense[]
 ```
-
-Routes MUST be chained (`.route().route()`) on a single instance for type inference. Separate `app.route()` calls lose type info.
 
 ## Type-Safe Fetch Wrapper
 

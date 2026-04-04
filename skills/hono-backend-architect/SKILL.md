@@ -1,13 +1,44 @@
 ---
 name: hono-backend-architect
-description: Hono + Bun + Supabase backend architecture guide covering secure middleware stacks, Zod-validated OpenAPI routes, dependency injection via middleware factories, and error boundary patterns. Use when building Hono APIs on Bun, integrating Supabase auth/database, creating route handlers, setting up middleware pipelines, implementing input validation, designing error handling, reviewing backend code security, or scaffolding new API features. Triggers on any Hono (.ts) backend, Bun server, or Supabase integration task.
+description: Hono + Bun + Supabase backend architecture guide covering secure middleware stacks, Zod-validated OpenAPI routes, dependency injection via middleware factories, and error boundary patterns. Use when building Hono APIs on Bun, integrating Supabase auth/database, creating route handlers, setting up middleware pipelines, implementing input validation, designing error handling, reviewing backend code security, or scaffolding new API features. Triggers on any Hono (.ts) backend, Bun server, or Supabase integration task. Do NOT use for front-end code, database schema design, or DevOps/deployment configuration.
 ---
 
 # Hono + Bun + Supabase Architect
 
-## Motivation
+## Expert Vocabulary
 
-These patterns are distilled from `hono-bun-cleanArchitecture`, `hono-open-api-starter`, `note-taker`, the official Hono docs, and a security audit of `expenseur`. They favor **functional composition over class hierarchies**, **middleware factories over global singletons**, and **Zod schemas as the single source of truth** for validation, types, and OpenAPI docs. All code follows snake_case naming for variables/functions, descriptive names (no single-letter abbreviations), and named imports exclusively.
+**Hono Framework:** middleware factory, `MiddlewareHandler`, `OpenAPIHono<Env>`, `createRoute()`, route chaining (`.route().route()`), `c.var` typed context, `AppBindings`, `default_hook`, `hc` RPC client
+
+**Bun Runtime:** `Bun.serve()`, `Bun.env`, `bun:test`, module resolution (`bundler`), `bun --watch`
+
+**Supabase Integration:** `createServerClient()`, `auth.getUser()`, Row-Level Security (RLS), anon key vs service role key, per-request client injection, cookie-based auth forwarding
+
+**API Patterns:** Zod-validated OpenAPI routes, `z.infer<typeof schema>`, dependency injection via middleware, `json_content()` / `json_content_required()`, vertical slice layout, barrel exports, discriminated union results (`ServiceResult<T>`)
+
+**Security:** `secureHeaders()`, CORS origin allowlist, CSRF origin check, `HTTPException` error boundary, rate limiting (`hono-rate-limiter`), input sanitization at route edge, env validation at startup
+
+## Anti-Pattern Watchlist
+
+1. **Raw env access** — accessing `process.env` or `Bun.env` directly instead of through a Zod-validated `env` object. Breaks type safety and fails silently on missing vars.
+2. **Client-side Supabase in server code** — using the anon key for server-side operations that need the service role key, or creating a browser client (`createBrowserClient`) on the server.
+3. **Middleware ordering mistakes** — placing auth middleware after route handlers, CORS after response, or rate limiting after auth. Middleware executes in registration order.
+4. **Fat route handlers** — embedding business logic, DB queries, and error handling directly in route handlers instead of delegating to services and middleware.
+5. **Untyped error responses** — throwing generic `Error` or returning ad-hoc JSON instead of using `HTTPException` with typed error schemas through the error boundary.
+6. **Module-level Supabase client** — creating `createServerClient()` at import time instead of per-request via middleware factory. Breaks cookie-based auth and shares state across requests.
+7. **Manual JWT decoding** — parsing JWT tokens with `atob()`/`JSON.parse()` instead of calling `supabase.auth.getUser()`, which validates the signature server-side.
+
+## Owned Surface & Conventions
+
+This skill owns Hono route/middleware architecture, Supabase auth integration, Zod-driven OpenAPI contracts, and error boundary design in Bun-based backends. It does **not** own frontend code, database schema design, or deployment/infrastructure.
+
+**Local defaults** — apply unless the codebase explicitly deviates:
+
+- **snake_case** for all variables, functions, and method names
+- **Named imports only** via barrel files — no default exports
+- **Descriptive names** — no single-letter abbreviations (`index` not `i`, `context` not `c`, `DataType` not `T`)
+- **Functional composition** over class hierarchies
+- **Middleware factories** over global singletons
+- **Zod schemas** as the single source of truth for validation, types, and OpenAPI docs
 
 ## Absolute Rules
 
@@ -92,6 +123,7 @@ export interface AppBindings {
     supabase: SupabaseClient;
     user: User;
     logger: Logger;
+    request_id: string;
   };
 }
 
@@ -106,23 +138,11 @@ export function create_app() {
 
 ### Supabase Auth Guard (Middleware Factory)
 
-```ts
-export const supabase_middleware = (): MiddlewareHandler<{ Variables: AppBindings['Variables'] }> => {
-  return async (context, next) => {
-    const client = createServerClient(/* env config, cookie handlers */);
-    context.set('supabase', client);
-    await next();
-  };
-};
+Shape — full implementations in [security-patterns.md](references/security-patterns.md):
 
-export const auth_guard = (): MiddlewareHandler<{ Variables: AppBindings['Variables'] }> => {
-  return async (context, next) => {
-    const { data: { user }, error } = await context.var.supabase.auth.getUser();
-    if (error || !user) return context.json({ message: 'Unauthorized' }, 401);
-    context.set('user', user);
-    await next();
-  };
-};
+```ts
+export const supabase_middleware = (): MiddlewareHandler => { /* createServerClient per-request with cookie forwarding → context.set('supabase', client) */ };
+export const auth_guard = (): MiddlewareHandler => { /* getUser() → 401 or context.set('user', user) */ };
 ```
 
 ### Route Definition (Zod + OpenAPI)
@@ -163,14 +183,11 @@ export const list: AppRouteHandler<ListRoute> = async (context) => {
 
 ### Error Boundary
 
+Shape — full implementation in [security-patterns.md](references/security-patterns.md):
+
 ```ts
 export const error_boundary: ErrorHandler = (error, context) => {
-  const request_id = context.var?.requestId ?? 'unknown';
-  if (error instanceof HTTPException) {
-    return context.json({ message: error.message, request_id }, error.status);
-  }
-  console.error(`[${request_id}]`, error);
-  return context.json({ message: 'Internal server error', request_id }, 500);
+  /* HTTPException → return its message; unexpected → log + generic 500 */
 };
 ```
 
@@ -190,4 +207,17 @@ app.use('/api/auth/*', rateLimiter({ limit: 10, window: 60 }));
 - [Security patterns](references/security-patterns.md)
 - [TypeScript patterns](references/typescript-patterns.md)
 - [Anti-patterns](references/anti-patterns.md)
+
+## Questions this skill answers
+
+- How do I structure a Hono + Bun + Supabase backend?
+- What middleware stack order should I use?
+- How do I inject Supabase clients per-request instead of using a global singleton?
+- How do I set up Zod-validated OpenAPI routes in Hono?
+- Where should business logic vs. route definitions live?
+- How do I implement auth guards with Supabase in Hono middleware?
+- What error handling pattern should I use (HTTPException vs. error boundary)?
+- How do I type Hono context variables with AppBindings?
+- How do I add rate limiting to public endpoints?
+- What are the naming and import conventions for this stack?
 

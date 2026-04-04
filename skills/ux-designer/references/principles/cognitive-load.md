@@ -14,11 +14,11 @@ Any design involves information display, form inputs, option lists, or multi-ele
 
 ## Rules
 
-- Limit ungrouped items in any single context to 5±2. Beyond that, chunk into labeled groups.
+- Beyond the 5±2 chunking rule (see Absolute Rules in [SKILL.md](../../SKILL.md)), label each group with a clear heading and limit group depth to two levels. Flat groups are easier to scan than nested ones.
 - Distinguish intrinsic load (task-relevant effort) from extraneous load (interface-imposed effort). Reduce only extraneous load.
 - Show only information the user needs for the current step. Defer secondary details behind progressive disclosure (expandable sections, detail views, tooltips).
 - Keep navigation and recurring controls in stable positions. Spatial consistency reduces scan time.
-- Use recognition patterns (icons with labels, autocomplete, recent items) over recall (blank text fields, memorized codes, undiscoverable shortcuts).
+- Beyond the recognition-over-recall rule (see Absolute Rules in [SKILL.md](../../SKILL.md)), prefer icons paired with labels, autocomplete, recent-items lists, and visible option sets over blank text fields, memorized codes, or undiscoverable shortcuts.
 - Support selective attention: one focal point per viewport. Competing animations, banners, or alerts fragment attention.
 - Mark visited/completed items distinctly so users do not re-process already-seen content.
 
