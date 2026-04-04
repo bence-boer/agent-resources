@@ -3,7 +3,6 @@
 ## Banned Patterns
 
 ### `export let` → `$props()`
-
 ```svelte
 <!-- ❌ -->
 <script lang="ts">
@@ -17,7 +16,6 @@
 ```
 
 ### `createEventDispatcher` → Callback Props
-
 ```svelte
 <!-- ❌ -->
 <script lang="ts">
@@ -33,7 +31,6 @@
 ```
 
 ### `<slot>` → `{@render children?.()}`
-
 ```svelte
 <!-- ❌ -->
 <slot name="header" />
@@ -49,7 +46,6 @@
 ```
 
 ### `$:` → `$derived` / `$effect`
-
 ```svelte
 <!-- ❌ -->
 <script>
@@ -65,7 +61,6 @@
 ```
 
 ### Stores → Runes
-
 ```ts
 // ❌
 import { writable, derived } from 'svelte/store';
@@ -82,7 +77,6 @@ export const count_store = new CountStore();
 ```
 
 ### `$app/stores` → `$app/state`
-
 ```svelte
 <!-- ❌ -->
 <script>
@@ -98,7 +92,6 @@ export const count_store = new CountStore();
 ```
 
 ### `on:event` → Native Event Attributes
-
 ```svelte
 <!-- ❌ -->
 <button on:click={handle_click}>
@@ -110,7 +103,6 @@ export const count_store = new CountStore();
 ```
 
 ### `let:variable` → Snippet Parameters
-
 ```svelte
 <!-- ❌ -->
 <List {items} let:item let:index>
@@ -126,7 +118,6 @@ export const count_store = new CountStore();
 ```
 
 ### `bind:this` → `ref` as `$bindable`
-
 ```svelte
 <!-- ❌ -->
 <script>
@@ -153,7 +144,6 @@ export const count_store = new CountStore();
 | `page` from `$app/stores` | `page` from `$app/state` |
 
 ### Template String Classes → `cn()`
-
 ```svelte
 <!-- ❌ -->
 <a class="group {classes} floating-border overflow-hidden">
@@ -163,7 +153,6 @@ export const count_store = new CountStore();
 ```
 
 ### Direct File or Sub-Barrel Imports → Package Barrel
-
 ```ts
 // ❌
 import Button from '$lib/components/ui/button/button.svelte';
@@ -174,7 +163,6 @@ import { Button } from '$lib/components/ui';
 ```
 
 ### Page-Only Components in `$lib/components` → Route-Local Placement
-
 ```text
 ❌ src/lib/components/dashboard-metrics.svelte
 ✅ src/routes/(app)/dashboard/components/dashboard-metrics.svelte
@@ -183,7 +171,6 @@ import { Button } from '$lib/components/ui';
 Promote into `$lib/components` only after a second real consumer appears.
 
 ### Runtime Values Marked as `type` → Value Imports and Exports
-
 ```ts
 // ❌
 import { type ButtonVariant } from './button-variant.ts';
@@ -195,7 +182,6 @@ export { ButtonVariant };
 ```
 
 ### Closed String Domains → Enums
-
 ```ts
 // ❌
 type ThemeMode = 'light' | 'dark';
@@ -215,7 +201,6 @@ enum ButtonSize {
 ```
 
 ### Instance-Script Variant Helpers → Module-Script Exports
-
 ```svelte
 <!-- ❌ -->
 <script lang="ts">
@@ -229,7 +214,6 @@ enum ButtonSize {
 ```
 
 ### Inline `as const` → Derived Types
-
 ```ts
 // ❌
 const options = {
@@ -248,7 +232,6 @@ const options: PdfOptions = {
 ## Common Mistakes
 
 ### Losing Reactivity in Class Constructors
-
 ```ts
 // ❌ — value captured at construction, not reactive
 class MyClass {
@@ -265,7 +248,6 @@ class MyClass {
 ```
 
 ### Using $effect Where $derived Suffices
-
 ```ts
 // ❌
 let label = $state('');
@@ -276,8 +258,26 @@ const label = $derived(`Count: ${count}`);
 ```
 
 ### Forgetting .svelte.ts Extension
-
 ```ts
 // ❌ store.ts — runes won't compile
 // ✅ store.svelte.ts — correct
+```
+
+### SSR Pitfalls
+```ts
+// ❌ Non-deterministic values cause hydration mismatch
+<p>{Date.now()}</p>
+<p>{Math.random()}</p>
+// ✅ Use load function data for server-derived values
+```
+```ts
+// ❌ Dynamic Tailwind classes — purged in production (see tailwind-v4-patterns.md)
+class={`bg-${color}-500`}
+// ✅ Complete class names only
+class={color === 'blue' ? 'bg-blue-500' : 'bg-gray-500'}
+```
+```svelte
+<!-- ❌ @apply in scoped <style> — doesn't work with TW v4 -->
+<style>.btn { @apply px-4 py-2; }</style>
+<!-- ✅ Define in app.css with @utility, use class in template -->
 ```

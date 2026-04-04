@@ -44,7 +44,7 @@ Start with these UI boundaries:
 3. feature components in `$lib/components/[feature]/`
 4. route-local components in `routes/**/components/`
 
-Group shared components by function, not by page. If a component only serves one route, keep it with that route and promote it only after a second real consumer appears.
+Group shared components by function, not by page. Colocate route-only UI with its route and promote to shared only when proven reuse demands it (the engineer skill defines the concrete promotion threshold).
 
 ## 4. Plan state before creating stores
 
@@ -120,7 +120,46 @@ src/
 
 Keep the number of top-level concepts small. If a new folder does not express ownership clearly, it probably does not belong yet.
 
-## 9. First-pass architecture checklist
+## 9. Choose an adapter early
+
+The deployment target affects architectural decisions. Pick before building features.
+
+Default decision tree:
+
+| Requirement | Default adapter |
+| --- | --- |
+| Full SSR + database access + custom server | `adapter-node` |
+| Serverless with edge support | `adapter-vercel` or `adapter-cloudflare` |
+| Static site or SPA | `adapter-static` with `fallback: '200.html'` if SPA |
+| Don't know yet | `adapter-auto` — switch when the target is clear |
+
+If deploying to a static host, set `trailingSlash: 'always'` and ensure all data comes from prerendering or client-side fetching.
+
+## 10. Plan environment variables
+
+SvelteKit provides four import paths for env vars. Choose deliberately:
+
+| Import | When available | Access |
+| --- | --- | --- |
+| `$env/static/private` | Build time | Server only — inlined by bundler |
+| `$env/static/public` | Build time | Server + client |
+| `$env/dynamic/private` | Runtime | Server only — read from process.env |
+| `$env/dynamic/public` | Runtime | Server + client |
+
+Default: use static imports unless the value must change between deploys without a rebuild.
+
+Validate required env vars at startup in `hooks.server.ts` and fail fast if missing.
+
+## 11. Set performance baselines
+
+Establish these targets before the first feature ships:
+
+- LCP < 2.5s, FID < 100ms, CLS < 0.1
+- Enable `cssMinify: 'lightningcss'` and `cssCodeSplit: true` in Vite build config
+- Configure `manualChunks` for large vendor libraries to prevent one giant bundle
+- Plan `data-sveltekit-preload-data="hover"` on primary navigation links
+
+## 12. First-pass architecture checklist
 
 Before implementation starts, confirm:
 
@@ -131,3 +170,6 @@ Before implementation starts, confirm:
 - the first feature can show loading, empty, error, and success states naturally
 - dependency choices are explicit and justified
 - the implementation handoff is specific enough for an engineer to start without guessing
+- adapter choice is explicit and matches the deployment target
+- environment variable strategy follows the 4-path model
+- performance baselines are set before features ship

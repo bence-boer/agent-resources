@@ -40,14 +40,17 @@ Read only what matches the change surface.
 - routes, loads, actions, hooks, or invalidation -> [sveltekit-patterns](references/sveltekit-patterns.md)
 - typing, schemas, or frontend/backend contracts -> [typescript-patterns](references/typescript-patterns.md)
 - migration or review of old code -> [anti-patterns](references/anti-patterns.md)
+- Tailwind v4 CSS-first config, dark mode, utilities -> [tailwind-v4-patterns](references/tailwind-v4-patterns.md)
+- lazy loading, prefetch, images, fonts, bundle analysis, CWV -> [performance-patterns](references/performance-patterns.md)
 
 ## Expert vocabulary
 
-- **Rune system**: `$props()`, `$derived`, `$state`, `$effect`, `$bindable`, `$inspect`, rune, fine-grained reactivity
+- **Rune system**: `$props()`, `$derived`, `$derived.by`, `$state`, `$state.raw`, `$state.snapshot`, `$state.eager`, `$effect`, `$effect.pre`, `$effect.tracking`, `$effect.root`, `$bindable`, `$inspect`, `$props.id`, rune, fine-grained reactivity, function bindings (`bind:value={() => val, setter}`)
 - **Component surface**: snippet, `{@render}`, `data-slot`, class prop, `cn()` (clsx + twMerge), `tv()` (tailwind-variants, Joe Bell), bits-ui, Formsnap
-- **SvelteKit data flow**: `+page.server.ts`, `+layout.server.ts`, load function, actions, `use:enhance`, `invalidate`, `depends`, `$app/state`
-- **Styling / variants**: tailwind-variants, clsx + twMerge, CSS custom properties, Tailwind v4, `@utility`, `@custom-variant`
+- **SvelteKit data flow**: `+page.server.ts`, `+layout.server.ts`, load function, actions, `use:enhance`, `invalidate`, `depends`, `depends()`, `$app/state`, `handleFetch`, `transformPageChunk`, `filterSerializedResponseHeaders`, `preloadData`, `preloadCode`, `data-sveltekit-preload-data`, `getRequestEvent`, `sequence()` hook composition, `transport` hook
+- **Styling / variants**: tailwind-variants, clsx + twMerge, CSS custom properties, Tailwind v4, `@utility`, `@custom-variant`, `@theme` block, `@source` directive, `@plugin` directive, `@import "tailwindcss"`, Lightning CSS (`cssMinify: 'lightningcss'`)
 - **Migration**: Svelte 4→5, `export let` → `$props()`, stores → runes, `<slot>` → snippet, `$app/stores` → `$app/state`
+- **Debugging & Performance**: `$inspect`, `DEBUG=vite:*`, `DEBUG=kit:*`, `css: { devSourcemap: true }`, `rollup-plugin-visualizer`, `web-vitals`, `requestIdleCallback`, `IntersectionObserver` lazy loading
 
 ## Anti-pattern watchlist
 
@@ -57,6 +60,9 @@ Read only what matches the change surface.
 4. **Prop drilling through wrappers** — passing props through intermediate wrapper components instead of using the Context API. Fix: introduce a Context at the compound root.
 5. **Store-in-component** — defining shared reactive state inside a `.svelte` file instead of a `.svelte.ts` module. Fix: extract to a colocated `.svelte.ts` file so the state is importable and testable.
 6. **Missing type imports** — using `import { X }` for types instead of `import type { X }` with `verbatimModuleSyntax` enabled. Fix: use `import type` for pure types; keep value imports for enums, const maps, and runtime helpers.
+7. **Runes in SSR context** — using `$state` or `$effect` in code that runs server-side (e.g., top-level module scope executed during SSR, or inside `+page.server.ts`). Detection: runtime error "$state is not defined" or silent SSR mismatch. Fix: confine `$state` and `$effect` to `.svelte` and `.svelte.ts` files; use load function data for server-derived values.
+8. **Dynamic Tailwind class interpolation** — constructing class names with template literals like `bg-${color}-500`. Detection: classes missing in production after CSS purging. Fix: always use complete class names; for truly dynamic values, use CSS custom properties with `style:` directive.
+9. **`@apply` in scoped styles** — using Tailwind's `@apply` inside a component's `<style>` block. Detection: `@apply` directive errors or missing styles. Fix: define custom utilities in `app.css` using `@utility name { ... }` or `@layer components { ... }`, then use the class name in templates.
 
 ## File placement defaults
 
@@ -88,6 +94,24 @@ These are implementation boundaries, not stylistic preferences.
 - Use arrays in `tv()` and multi-line template classes once a class list stops being readable on one line.
 - Use enums for closed string domains such as variants, sizes, modes, and statuses. Enum members use `SCREAMING_SNAKE_CASE`; enum values stay kebab-case.
 - Use `type` imports and exports only for true types. Enums, const maps, variant helpers, and other runtime values stay value imports and exports.
+
+## Extended rune API
+
+Beyond the core runes, these variants handle specific scenarios:
+
+| Rune variant | Purpose | When to use |
+| --- | --- | --- |
+| `$state.raw(value)` | Shallow reactive — no deep proxy | Large arrays or objects replaced wholesale, never mutated in-place |
+| `$state.snapshot(state)` | Plain object from reactive proxy | Passing to `structuredClone`, `JSON.stringify`, `console.log`, or external APIs that reject proxies |
+| `$state.eager(value)` | Immediate UI update during async | Navigation feedback, optimistic UI that must render before `await` completes |
+| `$effect.pre(() => {...})` | Runs before DOM update | Auto-scroll: read scroll position before DOM changes |
+| `$effect.tracking()` | Boolean: is code in tracking context? | Conditional behavior in library utilities |
+| `$effect.root(() => {...})` | Untracked scope with manual cleanup | Library-level abstractions managing their own lifecycle |
+| `$props.id()` | Component-unique, SSR-consistent ID | Accessible form labels: `<label for={id}>` + `<input id={id}>` |
+| `$inspect(value)` | Dev-only reactive debugger | Tracking state changes during development — stripped in production |
+| `$derived` destructuring | `let { a, b } = $derived(fn())` | All destructured variables stay reactive |
+| `$derived` overriding | Temporarily reassign a `$derived` | Optimistic UI: override derived value, revert when server confirms |
+| Function bindings | `bind:value={() => val, setter}` | Custom binding logic: transform or validate on write |
 
 ## Component API defaults
 
@@ -187,6 +211,13 @@ Use these defaults to keep files cohesive.
 - snippet props: semantic names, but keep the set small
 - `data-slot` values: semantic and stable, matching the rendered part name
 
+## Debugging
+
+- Use `$inspect(value)` during development to trace reactive state changes — it logs on every update and is stripped in production builds.
+- Enable verbose SvelteKit logging with `DEBUG=kit:* npm run dev` and Vite logging with `DEBUG=vite:*`.
+- Enable CSS source maps in development: `css: { devSourcemap: true }` in `vite.config.ts`.
+- For hydration mismatches, check for non-deterministic values in templates (`Date.now()`, `Math.random()`). Move these to load functions or `$effect`.
+
 ## Output expectations
 
 When implementing, be concrete:
@@ -276,3 +307,7 @@ export function use_dashboard_context() {
 - "Extract reusable logic from this component"
 - "Set up Context for this compound component"
 - "Wire up typed props and callbacks"
+- "How do I use $state.raw for performance?"
+- "Set up Tailwind v4 CSS-first config"
+- "Debug a hydration mismatch"
+- "Add prefetching to links"

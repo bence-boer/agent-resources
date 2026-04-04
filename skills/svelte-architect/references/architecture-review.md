@@ -79,7 +79,74 @@ Pressure-test the structure by asking:
 
 If the answer is no, the architecture is not scaling even if the app still works.
 
-## 7. Review output
+## 7. Dependency direction
+
+Verify that imports flow from volatile toward stable.
+
+Check:
+
+- Does `$lib/domain/` import from route files, `$lib/api/`, or SvelteKit modules? If yes, the Dependency Rule is violated.
+- Do page components import domain logic directly, or do they go through load functions and form actions (the adapter layer)?
+- Are there circular dependency warnings in the build output?
+
+Strong signal of a problem:
+
+- a domain type file imports `$app/state` or a component
+- a utility in `$lib/utils/` imports from a specific feature directory
+
+## 8. Deployment and adapter fit
+
+Verify the adapter matches the product requirements.
+
+Questions to answer:
+
+- Is the adapter explicitly chosen, or inherited from `adapter-auto` without review?
+- Does the deployment target support the features in use (streaming, WebSockets, file system access)?
+- Are environment variables using the correct import path (static vs dynamic, private vs public)?
+- Is prerendering configured for pages that can be static?
+
+Strong signal of a problem:
+
+- SSR features deployed to a static host
+- dynamic env vars used where static would suffice, adding unnecessary runtime overhead
+- no CSP configuration despite user-generated content
+
+## 9. Performance posture
+
+Audit whether performance is addressed structurally, not just hoped for.
+
+Check:
+
+- Are Core Web Vitals targets defined (LCP < 2.5s, FID < 100ms, CLS < 0.1)?
+- Is CSS optimized (`cssMinify`, `cssCodeSplit` enabled)?
+- Are large vendor libraries chunked via `manualChunks`?
+- Are images served in modern formats (WebP/AVIF) with responsive `srcset`?
+- Are navigation links using `data-sveltekit-preload-data`?
+- Is there a bundle analysis step (e.g., `rollup-plugin-visualizer`) in the build pipeline?
+
+Common failure modes:
+
+- performance is never measured — no CWV monitoring in production
+- font loading strategy is absent (no `font-display`, loading multiple weights instead of variable fonts)
+- all data is awaited sequentially in load functions instead of streaming secondary data
+
+## 10. Hook composition
+
+Verify that hooks are composed cleanly.
+
+Check:
+
+- Are multiple `handle` functions composed via `sequence()` from `@sveltejs/kit/hooks`?
+- Is each hook function single-purpose (auth, redirects, logging, rate limiting)?
+- Are `handleFetch`, `handleError`, and `filterSerializedResponseHeaders` implemented where relevant?
+- Is shared auth logic extracted into a reusable function using `getRequestEvent()` or a shared utility?
+
+Strong signal of a problem:
+
+- a single monolithic `handle` function mixing auth, redirects, logging, and feature flags
+- `handleError` is missing, causing raw error details to leak to the client
+
+## 11. Review output
 
 When reporting findings, always include:
 

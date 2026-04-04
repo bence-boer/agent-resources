@@ -236,3 +236,48 @@ async function typed_fetch<ResponseType>(url: string, init?: RequestInit): Promi
   return response.json() as Promise<ResponseType>;
 }
 ```
+
+## Branded Types
+
+Enforce nominal typing to prevent swapping structurally identical IDs:
+
+```ts
+declare const __brand: unique symbol;
+type Brand<T, B extends string> = T & { readonly [__brand]: B };
+
+type UserId = Brand<string, 'UserId'>;
+type PostId = Brand<string, 'PostId'>;
+
+function user_id(value: string): UserId { return value as UserId; }
+function post_id(value: string): PostId { return value as PostId; }
+
+// ✅ type-safe — cannot swap user and post IDs
+function get_user(id: UserId): Promise<User> { /* ... */ }
+get_user(user_id('abc'));  // ✅
+get_user(post_id('abc'));  // ❌ compile error
+```
+
+Place branded type utilities in `$lib/domain/types.ts`. Zero runtime cost — brands are phantom types stripped at compile time.
+
+## Template Literal Types
+
+Enforce valid string patterns at compile time:
+
+```ts
+type ApiVersion = 'v1' | 'v2';
+type ApiResource = 'users' | 'posts' | 'comments';
+type ApiEndpoint = `/api/${ApiVersion}/${ApiResource}`;
+
+function api_fetch(endpoint: ApiEndpoint): Promise<Response> {
+  return fetch(endpoint);
+}
+
+api_fetch('/api/v1/users');    // ✅
+api_fetch('/api/v3/users');    // ❌ compile error
+```
+
+Use for API route helpers, event channel names, and route path validation.
+
+## $props.id for Forms
+
+`$props.id()` returns a unique, SSR-hydration-consistent string — see [state-reactivity.md](state-reactivity.md#propsid) for the full component pattern. Key typing note: the returned `id` is `string`, so use it directly in template interpolation (`{id}-input`) — no brand wrapper needed.

@@ -201,3 +201,79 @@ Use `$app/state`, not `$app/stores`.
 - `$env/dynamic/*` only when runtime resolution is required
 
 Keep secret access out of components and browser code.
+
+## 11. Advanced hooks
+
+### handleFetch
+Rewrite internal fetch URLs or forward cookies to subdomains:
+
+```ts
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+  if (request.url.startsWith('https://api.example.com/')) {
+    request = new Request(request.url.replace('https://api.example.com/', 'http://internal-api:3000/'), request);
+    request.headers.set('cookie', event.request.headers.get('cookie') ?? '');
+  }
+  return fetch(request);
+};
+```
+
+### transformPageChunk
+Inject analytics or scripts into the HTML response:
+
+```ts
+const handle_transform: Handle = async ({ event, resolve }) => {
+  return resolve(event, {
+    transformPageChunk: ({ html }) =>
+      html.replace('</head>', '<script>/* analytics */</script></head>'),
+  });
+};
+```
+
+### filterSerializedResponseHeaders
+Control which headers are visible to client-side universal load `fetch` calls:
+
+```ts
+const handle_headers: Handle = async ({ event, resolve }) => {
+  return resolve(event, {
+    filterSerializedResponseHeaders: (name) =>
+      ['content-type', 'cache-control', 'x-request-id'].includes(name),
+  });
+};
+```
+
+## 12. SSR safety
+
+### Hydration mismatch prevention
+Never use non-deterministic values directly in templates:
+
+```ts
+// ❌ different on server vs client
+<p>Rendered at {Date.now()}</p>
+
+// ✅ use load function data
+export const load = async () => ({ timestamp: Date.now() });
+```
+
+### FOUC prevention
+Import CSS only in the root `+layout.svelte`, never in individual page components. For critical above-the-fold styles, inline a minimal `<style>` block in `app.html`.
+
+## 13. Prefetch patterns
+
+Prefetch implementation recipes are in [performance-patterns.md](performance-patterns.md#prefetch-patterns) — link-level (`data-sveltekit-preload-data`, `data-sveltekit-preload-code`) and programmatic (`preloadData`, `preloadCode`, `requestIdleCallback`).
+
+### Explicit dependency tracking
+```ts
+// In load function
+export const load = async ({ depends, fetch }) => {
+  depends('app:posts');
+  const posts = await fetch('/api/posts').then(r => r.json());
+  return { posts };
+};
+
+// In component — invalidate narrowly
+import { invalidate } from '$app/navigation';
+await invalidate('app:posts');
+
+// Conditional invalidation
+await invalidate((url) => url.pathname.startsWith('/api/posts'));
+```

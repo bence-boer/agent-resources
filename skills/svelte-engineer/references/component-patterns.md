@@ -249,13 +249,5 @@ Keep long Tailwind lists readable:
 
 - Use arrays in `tv()` once base or variant strings start mixing layout, typography, interaction, and accessibility rules.
 - Break long template `class=""` values across lines with aligned indentation.
-- Keep reusable tokens, `@utility` classes, and shared `@custom-variant` selectors in `app.css`; keep component-specific visual decisions in the component.
-
-```css
-@utility pop-card {
-  @apply rounded-[2rem] border-2 border-primary bg-card shadow-[4px_4px_0px_var(--color-accent)];
-}
-
-@custom-variant data-open (&[data-state=open]);
-```
+- Keep reusable tokens, `@utility` classes, and shared `@custom-variant` selectors in `app.css`; keep component-specific visual decisions in the component. See [tailwind-v4-patterns.md](tailwind-v4-patterns.md#custom-utilities) for `@utility` and `@custom-variant` syntax.
 

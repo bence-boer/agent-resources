@@ -40,6 +40,7 @@ If the request becomes file-level, stop at the architectural boundary — file-l
 - Existing app review, refactor, or migration -> read [architecture-review](references/architecture-review.md)
 - Mixed task -> read the review first to understand constraints, then the greenfield guide to define the target state
 - Once the architecture is decided, produce the structured handoff below, then stop and let the engineer implement
+- Adapter selection, advanced routing, hook composition, or deployment planning -> read [deployment-and-routing](references/deployment-and-routing.md)
 
 ## Expert vocabulary payload
 
@@ -52,6 +53,10 @@ If the request becomes file-level, stop at the architectural boundary — file-l
 **Design System:** CSS custom properties, Tailwind CSS v4, design tokens (`@theme`), `tailwind-variants`, component variants, `data-slot` convention, `bits-ui` headless primitives, `class` prop merging (`clsx`/`cn`), responsive container queries, dark mode via `color-scheme`
 
 **Data Flow:** server load functions, universal load functions, form actions (`use:enhance`), `ActionData`, `PageData`, progressive enhancement, streaming with `Promise` in load, `fail()` validation errors, `redirect()`, typed API clients (Hono `hc`, generated clients)
+
+**Architectural Principles:** Dependency Rule (Martin), Stable Dependencies Principle (Martin), afferent/efferent coupling, Feature-Sliced Design (FSD), state colocation heuristic, container/presentational separation, compound component pattern, Atomic Design hierarchy (Frost)
+
+**Deployment Architecture:** adapter-node, adapter-vercel, adapter-static, adapter-cloudflare, ISR (Incremental Static Regeneration), edge functions, CSP (Content Security Policy) mode, `reroute` hook, `transport` hook, `version.pollInterval`, prerender strategy
 
 ## Architectural anti-patterns
 
@@ -67,7 +72,7 @@ Treat these as structural problems, not style preferences. Check for them before
 
 ### 3. Shared folder as dumping ground
 **Detection:** A generic `shared/` or `common/` directory with components that have no clear ownership; files added there by default rather than by proven reuse.
-**Resolution:** Keep page-only components with their route. Promote to `$lib/components/[feature]/` only after a second real consumer exists. Group shared components by function, not by page.
+**Resolution:** Keep page-only UI colocated with its route. Promote to a shared location only when proven reuse demands it. Group shared components by function, not by page.
 
 ### 4. Primitives carrying business logic
 **Detection:** Design-system components (`Button`, `Dialog`, `Input`) import domain services, make API calls, or contain feature-specific branching.
@@ -84,6 +89,58 @@ Treat these as structural problems, not style preferences. Check for them before
 ### 7. Premature abstraction
 **Detection:** Abstraction layers (service wrappers, middleware, generic factories) introduced before any real repetition exists; new features require learning the abstraction before writing business logic.
 **Resolution:** Default to the smallest durable abstraction. Add layers only when a clear ownership problem or proven duplication demands it.
+
+### 8. Reinventing Svelte primitives
+**Detection:** Architecture introduces Observer-pattern store classes, custom event brokers, publish-subscribe buses, or DI containers when Svelte 5 runes, Context API, and SvelteKit load functions natively handle the same concern.
+**Resolution:** Map the intended pattern to its Svelte-native equivalent: `$state`/`$derived` replace reactive stores, `setContext`/`getContext` replace component-tree DI, SvelteKit load/action cycle replaces unidirectional dispatch, `$effect` with cleanup replaces manual subscriptions.
+
+## Architectural principles from software engineering
+
+These principles are adapted from Clean Architecture and related disciplines. Svelte 5 and SvelteKit implement many of these natively — the architect's job is to preserve the boundaries, not to reinvent the mechanisms.
+
+### Dependency Rule adapted to SvelteKit
+
+Dependencies must point inward, from volatile UI toward stable domain logic.
+
+| Clean Architecture Layer | SvelteKit Mapping | Stability |
+| --- | --- | --- |
+| Domain (entities, value objects) | `$lib/domain/` — pure TS, no framework imports | Most stable |
+| Application (use cases) | `$lib/services/` — orchestration, no UI knowledge | Stable |
+| Interface adapters | `+page.server.ts`, `+layout.server.ts`, `$lib/api/` | Moderate |
+| Frameworks and drivers | SvelteKit runtime, Supabase client, browser APIs | Most volatile |
+
+Rule: `$lib/domain/` never imports from `$lib/api/`, route files, or SvelteKit modules. Load functions and form actions are the adapter layer translating between domain and framework.
+
+### Stable Dependencies Principle
+
+Depend toward stability. Measure by coupling direction:
+
+- **Stable (many dependents, few dependencies):** `$lib/domain/`, `$lib/components/ui/` design system primitives
+- **Unstable (few dependents, many dependencies):** `+page.svelte` route components, `+page.server.ts` loaders
+
+If a proposed dependency flows from stable toward unstable (e.g., a domain type importing a page component), reject it.
+
+### Container and presentational separation
+
+SvelteKit enforces this naturally:
+
+- **Containers:** `+page.svelte` and `+layout.svelte` — receive `data` from load functions, orchestrate feature components, own page-level state
+- **Presentational:** `$lib/components/` — pure props in, callbacks and snippets out, no data fetching, no `$page` access, no `goto()`
+
+### What Svelte 5 implements natively
+
+Do not introduce extra architectural layers for problems that Svelte 5 and SvelteKit already solve:
+
+| Classic pattern | Svelte-native replacement |
+| --- | --- |
+| Observer / reactive store class | `$state`, `$derived`, `$effect` (compiler-managed, fine-grained) |
+| Pub/Sub event broker | Svelte reactivity propagation + `invalidate()` |
+| Mediator for workflow orchestration | SvelteKit load/action cycle + `hooks.server.ts` |
+| DI container (tokens, scopes) | `setContext`/`getContext` for component trees; load functions receive injected `event` |
+| Coordinator for routing | SvelteKit file-based routing + `redirect()` + `goto()` |
+| Manual unidirectional dispatch | SvelteKit `load()` → page → form actions → `load()` re-runs |
+
+If an architecture proposal introduces one of these classic patterns alongside its Svelte-native equivalent, prefer the native mechanism and remove the redundant layer.
 
 ## Default architectural baseline
 
@@ -109,7 +166,7 @@ Start here unless the task supplies a stronger constraint.
 - Group routes by shell, navigation, and access control, not by an arbitrary feature taxonomy.
 - Keep domain UI close to the feature it serves. Avoid a generic `shared/` dumping ground.
 - Keep design-system primitives separate from feature components. If a primitive needs business logic, it is no longer a primitive.
-- Keep page-only UI with the route that owns it. Move components into `$lib/components` only after they have more than one real consumer, and group that shared library by function rather than by page.
+- Keep page-only UI with the route that owns it. Promote to `$lib/components` only when proven reuse demands it, and group that shared library by function rather than by page.
 
 ### 2. Keep server-owned data on the server by default
 
@@ -306,3 +363,6 @@ Layout handles chrome. Server files handle data and auth. The page composes focu
 - "How do I organize routes and layouts?"
 - "What's the right data boundary for this feature?"
 - "Audit this app's architectural decisions"
+- "Which adapter should I use for deployment?"
+- "How should I handle multi-language routing?"
+- "Where do domain types and business logic live?"

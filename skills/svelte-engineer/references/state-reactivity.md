@@ -12,6 +12,12 @@
 | `$effect.root(() => {...})` | Untracked effect scope | Manual lifecycle control |
 | `$bindable(default)` | Two-way bindable prop | `ref`, `value`, `open` |
 | `$props()` | Component props | Every component |
+| `$state.snapshot(value)` | Plain object from proxy | `structuredClone`, `JSON.stringify`, logging, external API calls |
+| `$state.eager(value)` | Immediate UI update | Navigation feedback, optimistic UI before `await` |
+| `$effect.pre(() => {...})` | Runs before DOM update | Auto-scroll: read scroll position before DOM changes |
+| `$effect.tracking()` | Boolean: in tracking context? | Conditional behavior in library utilities |
+| `$props.id()` | Component-unique SSR-safe ID | `<label for={id}>` + `<input id={id}>` accessible forms |
+| `$inspect(value)` | Dev-only reactive logger | Trace state changes — stripped in production |
 
 ## Class-Based Reactive Primitives
 
@@ -168,6 +174,94 @@ class DataTable {
 }
 ```
 
+## $state.snapshot
+
+Extract a plain object from a reactive proxy. Required when passing reactive state to APIs that reject proxies:
+
+```ts
+let items = $state<Item[]>([{ name: 'test' }]);
+// ❌ structuredClone fails on proxy
+const clone = structuredClone(items);
+// ✅ snapshot first
+const clone = structuredClone($state.snapshot(items));
+
+// ✅ logging without proxy wrapper
+console.log($state.snapshot(items));
+```
+
+## $effect.pre
+
+Runs before the DOM updates. Use for reading layout measurements that would change after render:
+
+```ts
+let messages = $state<string[]>([]);
+let container: HTMLElement;
+$effect.pre(() => {
+  // read scroll position before new messages shift the layout
+  messages; // track dependency
+  const should_auto_scroll =
+    container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+  if (should_auto_scroll) {
+    // schedule scroll after DOM update
+    tick().then(() => { container.scrollTop = container.scrollHeight; });
+  }
+});
+```
+
+## $derived Advanced Patterns
+
+### Destructuring
+
+All destructured variables from `$derived` stay reactive:
+
+```ts
+let { width, height } = $derived(get_dimensions(element));
+// both width and height update reactively
+```
+
+### Temporary Override (Optimistic UI)
+
+A `$derived` value can be temporarily overridden and will revert when its dependencies change:
+
+```ts
+let server_count = $state(0);
+let count = $derived(server_count);
+function optimistic_increment() {
+  count = server_count + 1; // override derived temporarily
+  save_to_server().then(({ new_count }) => {
+    server_count = new_count; // derived recomputes, override cleared
+  });
+}
+```
+
+## Function Bindings
+
+Custom binding logic using getter/setter pairs:
+
+```svelte
+<script lang="ts">
+  let value = $state('hello');
+</script>
+
+<input bind:value={() => value, (v) => { value = v.toLowerCase(); }} />
+```
+
+Use for: transforming input on write (trim, lowercase, format), validating before accepting, or binding to non-trivial state shapes.
+
+## $props.id
+
+Generate unique, SSR-hydration-consistent IDs for accessible form patterns:
+
+```svelte
+<script lang="ts">
+  const id = $props.id();
+  let { label, value = $bindable('') }: { label: string; value?: string } = $props();
+</script>
+
+<label for="{id}-input">{label}</label>
+<input id="{id}-input" bind:value />
+```
+
 ## Effect Rules
 
 ### Valid Uses
@@ -175,14 +269,12 @@ class DataTable {
 ```ts
 // DOM manipulation
 $effect(() => { canvas_context.drawImage(video_element, 0, 0); });
-
 // Subscriptions with cleanup
 $effect(() => {
   const socket = new WebSocket(url);
   socket.onmessage = (event) => { messages.push(JSON.parse(event.data)); };
   return () => socket.close();
 });
-
 // External system sync
 $effect(() => { document.title = `${item_count} items`; });
 ```
