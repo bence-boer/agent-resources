@@ -4,13 +4,26 @@ Governs inclusive design ensuring the interface is usable by people with diverse
 
 ## Use when
 
-Every design task. Always consult this file alongside other principles.
+Any design involving visual states, interactive elements, form inputs, or touch targets — especially component and new-screen scenarios. The most critical accessibility requirements (target sizing, no-color-alone) are enforced by absolute rules in SKILL.md for all scenarios.
 
 ## Route next
 
 - [visual-hierarchy.md](visual-hierarchy.md) — to verify hierarchy is perceivable without color
 - [interaction.md](interaction.md) — to verify keyboard and assistive technology support
 - [cognitive-load.md](cognitive-load.md) — to reduce cognitive barriers
+
+## Minimum Target Sizes
+
+Accessibility standards and platform guidelines define minimum hit areas for reliable interaction.
+
+| Standard | Minimum Size | Context |
+| --- | --- | --- |
+| WCAG 2.2 (Level AA) | 24×24 CSS pixels | Absolute floor for accessibility; includes spacing requirements for small targets |
+| Apple HIG | 44×44 points | Recommended for iOS/iPadOS to accommodate average fingertip width (~10mm) |
+| Google Material Design | 48×48 dp | Standard for Android; ensures ~9mm physical size regardless of screen density |
+| WCAG 2.2 (Level AAA) | 44×44 CSS pixels | Required for enhanced accessibility for users with motor impairments or tremors |
+
+Spacing between targets: minimum 8dp/px separation to prevent accidental activation of adjacent actions.
 
 ## Rules
 
