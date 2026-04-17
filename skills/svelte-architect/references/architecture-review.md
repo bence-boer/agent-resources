@@ -28,6 +28,7 @@ Look for:
 - multiple patterns solving the same scope problem
 - client-side data orchestration compensating for a missing server boundary
 - Context used as a substitute for application architecture
+- remote `query()` instances created at **module scope** — these leak memory because they have no reactive context to anchor to; queries must be created inside component scripts, `$derived`, or `$effect` to be properly tracked and garbage-collected
 
 Apply the state scope hierarchy from the root skill. If the codebase skips several levels routinely, investigate why.
 

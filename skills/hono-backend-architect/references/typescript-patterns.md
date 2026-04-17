@@ -19,7 +19,7 @@ export interface AppBindings {
   };
 }
 
-export type AppRouteHandler<Route extends RouteConfig> = RouteHandler<Route, AppBindings>;
+export type AppRouteHandler<RouteType extends RouteConfig> = RouteHandler<RouteType, AppBindings>;
 
 export type AppOpenAPI = OpenAPIHono<AppBindings>;
 ```
@@ -95,8 +95,8 @@ export const expense_list_query_schema = pagination_schema.merge(date_range_sche
 // lib/helpers.ts
 import { z } from 'zod';
 
-export function json_content<Schema extends z.ZodType>(
-  schema: Schema,
+export function json_content<SchemaType extends z.ZodType>(
+  schema: SchemaType,
   description: string,
 ) {
   return {
@@ -105,8 +105,8 @@ export function json_content<Schema extends z.ZodType>(
   };
 }
 
-export function json_content_required<Schema extends z.ZodType>(
-  schema: Schema,
+export function json_content_required<SchemaType extends z.ZodType>(
+  schema: SchemaType,
   description: string,
 ) {
   return {
@@ -115,7 +115,7 @@ export function json_content_required<Schema extends z.ZodType>(
   };
 }
 
-export function create_error_schema<Schema extends z.ZodType>(schema: Schema) {
+export function create_error_schema<SchemaType extends z.ZodType>(schema: SchemaType) {
   return z.object({
     success: z.literal(false),
     error: z.object({
@@ -133,9 +133,15 @@ export function create_error_schema<Schema extends z.ZodType>(schema: Schema) {
 ## Discriminated Union Error Types
 
 ```ts
+const enum ServiceErrorCode {
+  NOT_FOUND = 'NOT_FOUND',
+  FORBIDDEN = 'FORBIDDEN',
+  VALIDATION = 'VALIDATION',
+}
+
 type ServiceResult<DataType> =
   | { success: true; data: DataType }
-  | { success: false; error: string; code: 'NOT_FOUND' | 'FORBIDDEN' | 'VALIDATION' };
+  | { success: false; error: string; code: ServiceErrorCode };
 
 // Usage in a service
 async function get_expense(
@@ -149,8 +155,8 @@ async function get_expense(
     .eq('id', expense_id)
     .single();
 
-  if (error) return { success: false, error: 'Expense not found', code: 'NOT_FOUND' };
-  if (data.user_id !== user_id) return { success: false, error: 'Forbidden', code: 'FORBIDDEN' };
+  if (error) return { success: false, error: 'Expense not found', code: ServiceErrorCode.NOT_FOUND };
+  if (data.user_id !== user_id) return { success: false, error: 'Forbidden', code: ServiceErrorCode.FORBIDDEN };
   return { success: true, data };
 }
 
@@ -161,7 +167,11 @@ export const get_one: AppRouteHandler<GetOneRoute> = async (context) => {
   );
 
   if (!result.success) {
-    const status_map = { NOT_FOUND: 404, FORBIDDEN: 403, VALIDATION: 422 } as const;
+    const status_map = {
+      [ServiceErrorCode.NOT_FOUND]: 404,
+      [ServiceErrorCode.FORBIDDEN]: 403,
+      [ServiceErrorCode.VALIDATION]: 422,
+    } as const satisfies Record<ServiceErrorCode, number>;
     throw new HTTPException(status_map[result.code], { message: result.error });
   }
 
@@ -179,7 +189,7 @@ function parse_response<T>(response: Response): Promise<T> { ... }
 type Result<T, E> = { data: T } | { error: E };
 
 // ✅
-function parse_response<ResponseBody>(response: Response): Promise<ResponseBody> { ... }
+function parse_response<ResponseBodyType>(response: Response): Promise<ResponseBodyType> { ... }
 type Result<DataType, ErrorType> = { data: DataType } | { error: ErrorType };
 ```
 
@@ -247,12 +257,12 @@ const expenses = await response.json(); // Typed as Expense[]
 For inter-service HTTP calls without Hono RPC:
 
 ```ts
-async function typed_fetch<ResponseBody>(
+async function typed_fetch<ResponseBodyType>(
   url: string,
   init?: RequestInit,
-): Promise<ResponseBody> {
+): Promise<ResponseBodyType> {
   const response = await fetch(url, init);
   if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-  return response.json() as Promise<ResponseBody>;
+  return response.json() as Promise<ResponseBodyType>;
 }
 ```

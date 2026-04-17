@@ -109,19 +109,24 @@ Configure where TW scans for classes:
 
 ```ts
 // theme-toggle.svelte.ts
-function get_preferred_theme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light';
+enum ThemeMode {
+  LIGHT = 'light',
+  DARK = 'dark',
+}
+
+function get_preferred_theme(): ThemeMode {
+  if (typeof window === 'undefined') return ThemeMode.LIGHT;
   const stored = localStorage.getItem('theme');
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  if (stored === ThemeMode.LIGHT || stored === ThemeMode.DARK) return stored as ThemeMode;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? ThemeMode.DARK : ThemeMode.LIGHT;
 }
 
 class ThemeManager {
-  mode: 'light' | 'dark' = $state(get_preferred_theme());
-  is_dark = $derived(this.mode === 'dark');
+  mode: ThemeMode = $state(get_preferred_theme());
+  is_dark = $derived(this.mode === ThemeMode.DARK);
 
   toggle() {
-    this.mode = this.mode === 'light' ? 'dark' : 'light';
+    this.mode = this.mode === ThemeMode.LIGHT ? ThemeMode.DARK : ThemeMode.LIGHT;
     localStorage.setItem('theme', this.mode);
     document.documentElement.classList.toggle('dark', this.is_dark);
   }
@@ -155,11 +160,11 @@ Apply on load to prevent flash: add `<script>` in `app.html` `<head>`:
 
 <!-- ✅ Object mapping for multiple options -->
 <script lang="ts">
-  const color_classes: Record<string, string> = {
+  const color_classes = {
     blue: 'bg-blue-500 text-blue-50',
     red: 'bg-red-500 text-red-50',
     green: 'bg-green-500 text-green-50',
-  };
+  } as const satisfies Record<string, string>;
 </script>
 <div class={cn(color_classes[color], class_name)}>
 ```

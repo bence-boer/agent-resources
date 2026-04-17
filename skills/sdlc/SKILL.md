@@ -34,35 +34,51 @@ Prescribe, assess, and coordinate software development lifecycle processes — f
 
 ## Anti-pattern watchlist
 
+**Documentation and specification failures**
+
 ### 1. Requirements Amnesia
 **Detection:** Development begins before requirements are documented. Requirements exist as verbal agreements, chat messages, or scattered tickets without a unified specification. No RTM exists. Developers ask "what should this do?" during implementation.
 **Resolution:** Complete requirements specification before architecture begins. Every requirement must be atomic, unambiguous, and testable. Initialize the RTM immediately — every requirement gets a unique ID that traces forward through design, implementation, and test. Requirements rework cost grows exponentially with each downstream phase it crosses.
 
-### 2. Security as Afterthought
-**Detection:** No threat model produced during architecture. Security review happens only during QA as penetration testing. No Documented Security Decisions exist. Security requirements are absent from the specification.
-**Resolution:** Integrate threat modeling during architecture, not testing. Produce DSDs before implementation. Treat security requirements as first-class functional requirements. Addressing vulnerabilities after construction costs 6–30× more than addressing them during design (NIST).
-
-### 3. Traceability Gap
+### 2. Traceability Gap
 **Detection:** Test cases cannot be linked to specific requirements. Features exist without corresponding RTM entries. The RTM was created once and never updated. Coverage is measured by lines of code, not by requirement coverage.
 **Resolution:** The RTM is a living artifact — update it in every phase. Forward-trace: every requirement maps to a design element, implementation component, and test case. Backward-trace: every test case maps to the requirement it validates. If an artifact cannot be traced, it is either unauthorized scope or an orphaned requirement.
 
-### 4. Rubber-Stamp Gate
-**Detection:** Phase transitions happen without documented review. Entry/exit criteria are not defined or routinely waived. Reviews consist of "looks good" without structured evaluation. The same person authors and approves the work.
-**Resolution:** Define explicit entry and exit criteria for each phase gate before the project begins. Conduct reviews with role segregation — the author cannot lead the review. Document findings and disposition. A gate that never rejects anything is not a gate.
+### 3. Change-Log Documentation
+**Detection:** Documentation files accumulate entries describing what changed, what was fixed, what was found, or what was attempted. "Previous state" or "original approach" sections exist. Outdated plans, resolved issues, superseded decisions, or already-addressed known problems remain in the documentation folder. Agents reading the docs receive a mixture of current and obsolete information with no reliable way to distinguish them.
+**Resolution:** Documentation must describe the current state of the system as if it were always true — not the history of changes or the sequence of problems encountered. The moment any artifact, plan, issue, or decision is superseded or resolved, update or remove it immediately. A docs folder containing outdated plans is an active liability: it misleads agents and reviewers with false information. Working notes and active plans belong in a designated working directory (e.g., `docs/plans`), which applies the same removal discipline — entries are removed as soon as the work is complete.
+
+**Security and design failures**
+
+### 4. Security as Afterthought
+**Detection:** No threat model produced during architecture. Security review happens only during QA as penetration testing. No Documented Security Decisions exist. Security requirements are absent from the specification.
+**Resolution:** Integrate threat modeling during architecture, not testing. Produce DSDs before implementation. Treat security requirements as first-class functional requirements. Addressing vulnerabilities after construction costs 6–30× more than addressing them during design (NIST).
 
 ### 5. Architecture Bypass
 **Detection:** Construction begins directly from requirements without a design document. Data models, API contracts, and module boundaries emerge organically during implementation. Architectural decisions are made implicitly by whoever writes first.
 **Resolution:** Complete the Software Design Description before writing production artifacts. Every architectural decision must be explicit, documented, and ratified. An unwritten architecture is not "agile" — it is an architecture decided by accident.
 
-### 6. Informal Inspection
+**Review and quality failures**
+
+### 6. Rubber-Stamp Gate
+**Detection:** Phase transitions happen without documented review. Entry/exit criteria are not defined or routinely waived. Reviews consist of "looks good" without structured evaluation. The same person authors and approves the work.
+**Resolution:** Define explicit entry and exit criteria for each phase gate before the project begins. Conduct reviews with role segregation — the author cannot lead the review. Document findings and disposition. A gate that never rejects anything is not a gate.
+
+### 7. Informal Inspection
 **Detection:** Review is a single approver clicking "approve." No designated roles (reader, reviewer, moderator). No defect log produced. Review comments are suggestions, never blocking findings. Average review time is under 5 minutes for substantial changes.
 **Resolution:** Scale formality to risk: full Fagan Inspection for high-risk components (security, financial, safety), structured review with documented findings for standard work. At minimum, every review must produce a written record of what was examined and what was found.
 
-### 7. Big Bang Integration
+### 8. Symptom-Only Defect Resolution
+**Detection:** A defect is closed by patching the observable failure without root-cause investigation. The fix is scoped to "make the test pass," "suppress the error," or "work around the edge case." The root cause is deferred as "out of scope," "too large," or "a separate task." The same failure class recurs in later iterations.
+**Resolution:** Every defect fix must begin with root-cause analysis. The scope of the correct fix is whatever the root cause requires: a targeted change, a refactor, a new feature, or an architectural revision. Scope constraints never justify a patch over the correct solution. A fix that does not address the cause has not resolved the defect — it has deferred it and obscured it.
+
+**Construction and delivery failures**
+
+### 9. Big Bang Integration
 **Detection:** All modules developed and unit-tested in isolation, then assembled at once near the end of the schedule. Integration defects discovered during system testing or acceptance testing. Interface contracts not verified incrementally.
 **Resolution:** Integrate incrementally. Test module interfaces as they connect, not after everything is assembled. Integration testing validates that individually correct components communicate correctly — this is a distinct verification concern that cannot be deferred.
 
-### 8. Deploy-and-Pray
+### 10. Deploy-and-Pray
 **Detection:** Release plan has no rollback procedure. Deployment strategy assumes success. No pre-deployment validation in a staging environment. CMDB update is not part of the release checklist. No Change Advisory Board review or equivalent governance.
 **Resolution:** Every release requires: a tested rollback procedure, pre-deployment validation (SVT), stakeholder authorization (CAB or equivalent), and post-deployment CMDB update. The deployment strategy must be chosen based on risk profile — canary, blue-green, or phased rollout. A release without a rollback plan is an irreversible bet.
 
@@ -114,9 +130,10 @@ When composed with orchestration disciplines, this skill provides the domain con
 1. **Identify the lifecycle context:** Which phase is the task in, or is this a cross-phase oversight question? If ambiguous, ask what artifacts exist — the presence or absence of SRS, SDD, test plan, etc. determines the current phase.
 2. **Scan for anti-patterns** from the watchlist above. Flag any detected anti-patterns with their name and resolution before proceeding.
 3. **Assess the formality tier** (see Scaling Guide below): Is this lightweight, standard, or formal context? Adjust ceremony expectations accordingly, but never compromise the scaling invariants.
-4. **IF single-phase task:** Load the matching reference file from the routing matrix and follow its procedures. Verify prior phase outputs are complete before starting the current phase.
-5. **IF cross-phase or oversight:** Use the phase overview matrix. Identify the current phase, verify all prior phase outputs are complete, diagnose gaps, and prescribe next steps with priority ordering.
-6. **Produce actionable output:** Every response must include specific artifact requirements, gate criteria, and recommended actions — not general advice.
+4. **Apply documentation discipline (Anti-Pattern #3):** All artifacts must describe current state as of now — supersede immediately, never append corrections or 'as of' notes. See [references/planning.md](references/planning.md) for the full documentation discipline protocol including the rolling documentation rules, working directory convention, and documentation manifest requirements.
+5. **IF single-phase task:** Load the matching reference file from the routing matrix and follow its procedures. Verify prior phase outputs are complete before starting the current phase.
+6. **IF cross-phase or oversight:** Use the phase overview matrix. Identify the current phase, verify all prior phase outputs are complete, diagnose gaps, and prescribe next steps with priority ordering.
+7. **Produce actionable output:** Every response must include specific artifact requirements, gate criteria, and recommended actions — not general advice.
 
 ## Scaling guide
 
@@ -136,12 +153,14 @@ The seven phases are invariant — every project moves through all of them. What
 **Scaling invariants — what never scales down to zero:**
 1. **Testable requirements** — Requirements must exist in written form and be testable, at every scale
 2. **Traceability** — Every test must trace to a requirement, at every scale
-3. **Documented architecture decisions** — The design document can be abbreviated, but key decisions cannot be skipped
-4. **Author-separate review** — The person who created the work cannot be the sole reviewer, at every scale
-5. **Rollback capability** — Every deployment must have a defined reversion path, at every scale
-6. **Gate criteria** — Every phase transition must have defined completion criteria, at every scale
+3. **Test-first verification** — Implementation proceeds test-first at every scale: tests are written or specified before the components they validate are implemented, and the system remains in a passing state for all completed components throughout development. A component without passing tests is a draft, not a deliverable. "Tests will be added later" is not a valid intermediate state at any scale.
+4. **Documented architecture decisions** — The design document can be abbreviated, but key decisions cannot be skipped
+5. **Author-separate review** — The person who created the work cannot be the sole reviewer, at every scale
+6. **Root-cause defect resolution** — Defects are resolved at the cause, not the symptom. A patch that makes a test pass without addressing the underlying issue is not a resolution at any scale. When a defect is found, the correct fix is the one that eliminates the cause — regardless of the scope that requires.
+7. **Rollback capability** — Every deployment must have a defined reversion path, at every scale
+8. **Gate criteria** — Every phase transition must have defined completion criteria, at every scale
 
-**The phases scale in formality. The discipline is constant.**
+The phases scale in formality. The discipline is constant.
 
 ## Examples
 
@@ -153,7 +172,7 @@ The stakeholder described what they want. Start implementing the features
 they mentioned. We'll figure out the database schema as we go and add
 security checks during testing.
 ```
-Problems: No SRS produced. No SDD or architecture phase. Security deferred to testing (Anti-Pattern #2). No RTM initialized (Anti-Pattern #3). Architecture decided by accident (Anti-Pattern #5).
+Problems: No SRS produced. No SDD or architecture phase. Security deferred to testing (Anti-Pattern #4). No RTM initialized (Anti-Pattern #2). Architecture decided by accident (Anti-Pattern #5).
 
 **GOOD:**
 ```
@@ -224,7 +243,7 @@ The project seems to be going okay. Some code has been written and there
 are a few tests. I think we should keep going and do a review when it
 feels ready.
 ```
-Problems: No phase identification. No artifact verification. "Feels ready" is not a gate criterion. No traceability assessment. Rubber-stamp review anticipated (Anti-Pattern #4).
+Problems: No phase identification. No artifact verification. "Feels ready" is not a gate criterion. No traceability assessment. Rubber-stamp review anticipated (Anti-Pattern #6).
 
 **GOOD:**
 ```
@@ -248,7 +267,7 @@ meaning implementation is proceeding against an incomplete architecture
 
 ### Traceability Status
 8 of 23 requirements lack forward-trace to design elements (Anti-Pattern
-#3: Traceability Gap). These must be resolved before Phase 5 testing can
+#2: Traceability Gap). These must be resolved before Phase 5 testing can
 meaningfully validate requirement coverage.
 
 ### Recommended Actions (priority order)
@@ -283,4 +302,3 @@ meaningfully validate requirement coverage.
 - What are the most common process failures in software development?
 - How do I ensure traceability from requirements through testing?
 - What security artifacts are needed during architecture?
-- How do I handle the design-to-development handoff?

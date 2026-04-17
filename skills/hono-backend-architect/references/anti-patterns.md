@@ -140,7 +140,7 @@ const config = {
 };
 
 // ✅
-const config = { port: 8000, host: 'localhost' } satisfies ServerConfig;
+const config = { port: 8000, host: 'localhost' } as const satisfies ServerConfig;
 ```
 
 Type inference and edge validation patterns with full BAD/GOOD examples are in [typescript-patterns.md](../typescript-patterns.md). Key rules: infer types from Zod schemas with `z.infer<>`, validate at route definition not in handlers.

@@ -192,7 +192,14 @@ We'll use the `Sidebar.Menu` component in a `Sidebar.Group`.
   import InboxIcon from "@lucide/svelte/icons/inbox";
   import SearchIcon from "@lucide/svelte/icons/search";
   import SettingsIcon from "@lucide/svelte/icons/settings";
+  import type { Component } from "svelte";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+
+  interface MenuItem {
+    title: string;
+    url: string;
+    icon: Component;
+  }
 
   // Menu items.
   const items = [
@@ -221,7 +228,7 @@ We'll use the `Sidebar.Menu` component in a `Sidebar.Group`.
       url: "#",
       icon: SettingsIcon,
     },
-  ];
+  ] as const satisfies MenuItem[];
 </script>
 
 <Sidebar.Root>

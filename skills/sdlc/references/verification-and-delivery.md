@@ -41,28 +41,35 @@ Prove that integrated components function as a cohesive system and satisfy the c
 - Identifies items to be tested, approach, environmental needs, features excluded, and absolute pass/fail criteria
 - Specifies execution conditions and predicted results — no subjective interpretation of outcomes
 - Must be produced before testing begins
+- The test plan is also the verification baseline — an implementation that passes all tests but diverges from the plan's specified behavior is not verified.
 
 **Testing Tiers (ascending complexity):**
 
 1. **Integration Testing:** Validates that unit-tested modules communicate correctly across interfaces and shared data structures. Exposes interface discrepancies and architectural friction.
 
-2. **System Verification:** Evaluates the complete, integrated system against technical specifications from the SDD and SRS. Answers: *"Are you building it right?"* Includes functional testing, load testing, and Dynamic Application Security Testing (DAST) to probe for runtime vulnerabilities.
+2. **System Verification:** Evaluates the complete, integrated system against technical specifications from the SDD and SRS. Answers: *"Are you building it right?"* Includes functional testing, load testing, and Dynamic Application Security Testing (DAST) to probe for runtime vulnerabilities. Final system verification checks against the approved specification, not only against test pass/fail — behavioral conformance to the specification is a required verification outcome.
 
 3. **System Validation (UAT):** Evaluates performance against real-world end-user needs in a production-simulating environment. Answers: *"Are you building the right thing?"* Assesses whether specified UX workflows translate to practical operational efficiency and user satisfaction.
+
+Failure isolation follows the tier boundary: when a regression appears, the fix is verified against the failing test subset first; once the subset passes, the full suite runs before advancing to the phase gate.
 
 **Traceability Maintenance:**
 - RTM continuously updated throughout testing — every successful test case mapped back to an original requirement
 - A test failure mandates a logged defect, routing the component back for rework (closed-loop V-Model verification)
 - Plan-Do-Check-Act (PDCA/Deming) cycle ensures continuous quality evaluation
+- Any test failure must be root-cause-analyzed before the suite is re-executed — undifferentiated re-running without diagnosis treats tests as probabilistic and degrades the traceability record.
 
 ### Gate Criteria (Exit)
 
-- [ ] IEEE 829 Test Plan executed — all planned tests run
-- [ ] Integration testing: all module interfaces verified
-- [ ] System verification: functional, load, and DAST testing complete
-- [ ] System validation (UAT): end-user sign-off obtained
-- [ ] RTM shows full forward/backward traceability — every requirement has a linked test result
-- [ ] All critical and high-severity defects resolved; remaining defects dispositioned
+- [ ] All test types executed — unit, integration, system, UAT
+- [ ] All tests written before the components they verify; no test-debt deferred
+- [ ] Test coverage meets or exceeds the threshold defined in the test plan
+- [ ] No critical or high-severity defects open
+- [ ] All defects triaged: root cause documented, not symptom-patched
+- [ ] All failures root-cause-analyzed before any re-execution; no undifferentiated re-runs
+- [ ] RTM fully updated — all requirements trace to passing tests
+- [ ] User acceptance sign-off obtained or waived with documented rationale
+- [ ] Phase transition decision recorded in the SPMP or equivalent governance artifact
 
 ### Scaling Notes
 

@@ -51,9 +51,9 @@ To show the command menu in a dialog, use the `<Command.Dialog />` component ins
 
   let open = $state(false);
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
       open = !open;
     }
   }

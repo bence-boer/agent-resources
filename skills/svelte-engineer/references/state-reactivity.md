@@ -19,118 +19,143 @@
 | `$props.id()` | Component-unique SSR-safe ID | `<label for={id}>` + `<input id={id}>` accessible forms |
 | `$inspect(value)` | Dev-only reactive logger | Trace state changes — stripped in production |
 
+## $state Proxy Semantics
+
+`$state({})` and `$state([])` create a deep reactive Proxy for **plain objects and arrays only**.
+
+### Only plain objects and arrays are deep-proxied
+
+Class instances inside `$state` are NOT proxied recursively — they must use `$state` fields internally:
+
+```ts
+// ❌ silent non-reactivity — Position.x mutations won't be tracked
+class Position { x = 0; y = 0; }
+let pos = $state({ position: new Position() });
+
+// ✅ use $state fields inside the class
+class Position {
+  x = $state(0);
+  y = $state(0);
+}
+let pos = $state({ position: new Position() });
+```
+
+### Destructuring a proxy breaks reactivity
+
+```ts
+let todos = $state<Todo[]>([{ id: '1', done: false, text: 'learn' }]);
+
+// ❌ captures a snapshot — done and text are NOT reactive
+const { done, text } = todos[0];
+
+// ✅ access through the proxy — reactive
+let first_done = $derived(todos[0].done);
+```
+
+### Original object is not mutated by proxy writes
+
+```ts
+const original = { theme: 'light' } as const satisfies Config;
+let config = $state(original);
+config.theme = 'dark';
+// original.theme is still 'light'
+// Use $state.snapshot(config) to export a plain copy
+```
+
 ## Class-Based Reactive Primitives
 
-```ts
-// media-query.svelte.ts
-export class MediaQuery {
-  #is_matching: boolean = $state(false);
-
-  constructor(query_string: MaybeGetter<string>) {
-    $effect(() => {
-      const media_query_list = window.matchMedia(extract(query_string));
-      this.#is_matching = media_query_list.matches;
-      const handle_change = (event: MediaQueryListEvent) => {
-        this.#is_matching = event.matches;
-      };
-      media_query_list.addEventListener('change', handle_change);
-      return () => media_query_list.removeEventListener('change', handle_change);
-    });
-  }
-
-  get current(): boolean { return this.#is_matching; }
-}
-```
-
-- Private `$state` with `#` prefix (never `private` keyword)
-- Public read via `get current()` (`.current` convention)
-- Constructor takes `MaybeGetter<ValueType>` for flexible reactivity
-- `$effect` with cleanup for subscriptions
-- Export class, not instance (unless global singleton)
-
-## Function-Based Reactive Utilities
+Encapsulate cohesive state + behaviour in `.svelte.ts` classes. Export the class, not an instance, unless the state is a true global singleton.
 
 ```ts
-// use-event-listener.svelte.ts
-export function use_event_listener<EventName extends keyof WindowEventMap>(
-  target: MaybeGetter<EventTarget | null>,
-  event_name: EventName,
-  handler: (event: WindowEventMap[EventName]) => void,
-  options?: AddEventListenerOptions,
-) {
-  $effect(() => {
-    const element = extract(target);
-    if (!element) return;
-    element.addEventListener(event_name, handler as EventListener, options);
-    return () => element.removeEventListener(event_name, handler as EventListener, options);
-  });
-}
-```
-
-Naming: `use_*` for imperative setup, `on_*` for event-like patterns.
-
-## Context API
-
-### Simple Context
-
-```ts
-// table-context.svelte.ts
-import { setContext, getContext } from 'svelte';
-
-const TABLE_CONTEXT_KEY = Symbol('table');
-
+// search-state.svelte.ts
 enum SortDirection {
-  ASC = 'asc',
-  DESC = 'desc',
+  ASCENDING = 'asc',
+  DESCENDING = 'desc',
 }
 
-class TableContext {
-  #sort_column = $state('');
-  #sort_direction: SortDirection = $state(SortDirection.ASC);
+export class SearchState {
+  #query = $state('');
+  #page = $state(1);
+  #sort_direction = $state<SortDirection>(SortDirection.ASCENDING);
 
-  get sort_column() { return this.#sort_column; }
-  get sort_direction() { return this.#sort_direction; }
+  get query(): string { return this.#query; }
+  get page(): number { return this.#page; }
+  get sort_direction(): SortDirection { return this.#sort_direction; }
 
-  sort(column: string) {
-    if (this.#sort_column === column) {
-      this.#sort_direction = this.#sort_direction === SortDirection.ASC
-        ? SortDirection.DESC
-        : SortDirection.ASC;
-    } else {
-      this.#sort_column = column;
-      this.#sort_direction = SortDirection.ASC;
-    }
+  // $derived at class field scope — recomputes when deps change
+  readonly results_key = $derived(`${this.#query}:${this.#page}`);
+
+  set_query(query: string): void {
+    this.#query = query;
+    this.#page = 1; // reset pagination on new search
   }
-}
 
-export function set_table_context() {
-  return setContext(TABLE_CONTEXT_KEY, new TableContext());
-}
+  set_sort_direction(direction: SortDirection): void { this.#sort_direction = direction; }
 
-export function use_table_context() {
-  return getContext<TableContext>(TABLE_CONTEXT_KEY);
+  next_page(): void { this.#page++; }
+  prev_page(): void { if (this.#page > 1) this.#page--; }
 }
 ```
 
-### Context with Getter Props
+Key conventions:
+- Private `$state` with `#` prefix — never the `private` keyword
+- Public reads via `get` properties — never expose writable state directly
+- State transitions through explicit methods — no public setters that bypass invariants
+- `$derived` at class field scope for computed values
+- Export `class`, not `export const instance = new ...` (unless intentionally a singleton)
 
-Direct `$state` values lose reactivity in class constructors — wrap in getters:
+> For browser APIs with official Svelte equivalents, use those instead of DIY wrappers:
+> `MediaQuery` from `svelte/reactivity`, `on()` from `svelte/events` — see [svelte-api-modules.md](svelte-api-modules.md).
+
+For imperative event attachment, use `on()` from `svelte/events` — see [svelte-api-modules.md](svelte-api-modules.md). It integrates with Svelte's delegation system, returns a cleanup function, and does not require `$effect` wrapping.
+
+## createContext<T>() — Type-Safe Context
+
+`createContext<T>()` (v5.40+) returns a typed `[get, set]` tuple sharing an isolated key. **Must be called at module scope** — top-level in a `.svelte.ts` file or `<script module>` block. Never inside functions or component instances. See [svelte-api-modules.md](svelte-api-modules.md) for both patterns and the gotcha about `get` throwing when no parent set the context.
+
+```ts
+// widget-context.svelte.ts (canonical form)
+import { createContext } from 'svelte';
+
+class WidgetState {
+  expanded = $state(false);
+  toggle(): void { this.expanded = !this.expanded; }
+}
+
+export const [get_widget_context, set_widget_context] = createContext<WidgetState>();
+```
+
+### Context with reactive getter props
+
+Direct `$state` values passed to class constructors are captured as snapshots — NOT reactive. Wrap in getter functions to preserve the reactive chain:
 
 ```ts
 class DialogState {
-  readonly props: { get_open: () => boolean; set_open: (value: boolean) => void };
-  is_open = $derived.by(() => this.props.get_open());
+  readonly #get_open: () => boolean;
+  readonly #set_open: (value: boolean) => void;
 
-  constructor(props: typeof DialogState.prototype.props) {
-    this.props = props;
+  readonly is_open = $derived.by(() => this.#get_open());
+
+  constructor(get_open: () => boolean, set_open: (value: boolean) => void) {
+    this.#get_open = get_open;
+    this.#set_open = set_open;
   }
 
-  toggle() { this.props.set_open(!this.is_open); }
+  toggle(): void { this.#set_open(!this.is_open); }
+  close(): void { this.#set_open(false); }
 }
 
-export function set_dialog_context(get_open: () => boolean, set_open: (value: boolean) => void) {
-  return setContext(DIALOG_CONTEXT_KEY, new DialogState({ get_open, set_open }));
-}
+const [get_dialog_context, set_dialog_context] = createContext<DialogState>();
+export { get_dialog_context, set_dialog_context };
+```
+
+```svelte
+<!-- Parent — passes getters not values -->
+<script lang="ts">
+  import { set_dialog_context, DialogState } from './dialog-context.svelte.js';
+  let is_open = $state(false);
+  set_dialog_context(new DialogState(() => is_open, (value) => { is_open = value; }));
+</script>
 ```
 
 ## Global Stores
@@ -153,7 +178,7 @@ class ThemeStore {
   constructor() {
     if (typeof window !== 'undefined') {
       $effect.root(() => {
-        $effect(() => { document.documentElement.dataset.theme = this.mode; });
+        $effect(() => { document.documentElement.dataset.theme = this.mode; }); // Valid: document metadata sync — one of 5 academic $effect exceptions
       });
     }
   }
@@ -243,7 +268,7 @@ Custom binding logic using getter/setter pairs:
   let value = $state('hello');
 </script>
 
-<input bind:value={() => value, (v) => { value = v.toLowerCase(); }} />
+<input bind:value={() => value, (new_value) => { value = new_value.toLowerCase(); }} />
 ```
 
 Use for: transforming input on write (trim, lowercase, format), validating before accepting, or binding to non-trivial state shapes.
@@ -254,8 +279,9 @@ Generate unique, SSR-hydration-consistent IDs for accessible form patterns:
 
 ```svelte
 <script lang="ts">
+  interface Props { label: string; value?: string }
   const id = $props.id();
-  let { label, value = $bindable('') }: { label: string; value?: string } = $props();
+  let { label, value = $bindable('') }: Props = $props();
 </script>
 
 <label for="{id}-input">{label}</label>

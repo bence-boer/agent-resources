@@ -192,8 +192,9 @@ Run `npm run build` and inspect the generated `stats.html`.
 ```ts
 // hooks.client.ts or a component loaded on every page
 import { onCLS, onFID, onLCP, onTTFB, onINP } from 'web-vitals';
+import type { Metric } from 'web-vitals';
 
-function report_metric(metric: { name: string; value: number; id: string }) {
+function report_metric(metric: Metric) {
   // Send to analytics endpoint
   navigator.sendBeacon('/api/vitals', JSON.stringify(metric));
 }

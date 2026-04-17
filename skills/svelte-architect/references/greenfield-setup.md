@@ -14,7 +14,7 @@ Start with these defaults unless the task names a stronger constraint.
 | Variant system | `tailwind-variants` for primitives |
 | Headless behavior | `bits-ui` |
 | Validation | Zod |
-| Data reads | `+page.server.ts` / `+layout.server.ts` |
+| Data reads | `+page.server.ts` / `+layout.server.ts`; or `.remote.ts` `query()` for component-colocated reads (SvelteKit 2.27+, experimental — requires `kit.experimental.remoteFunctions: true`) |
 | Mutations | Form actions |
 | Global client state | Keep minimal: auth/session, theme, feature flags |
 | Type safety across backend | One typed client boundary, not scattered manual types |
@@ -173,3 +173,14 @@ Before implementation starts, confirm:
 - adapter choice is explicit and matches the deployment target
 - environment variable strategy follows the 4-path model
 - performance baselines are set before features ship
+
+## 13. Error boundary placement
+
+Plan `<svelte:boundary>` placement before implementation — boundaries placed too late are hard to retrofit.
+
+- Place one boundary at each **major async data surface** (a route segment that streams or loads independently)
+- Place boundaries around **data-rich subtrees** that could fail in isolation without breaking the whole page
+- Do NOT wrap the entire app shell in a single boundary — one global catch-all masks distinct failure modes
+- Keep boundaries **close to the failure point** but not so granular that fallback UI fragments the page unintelligibly
+- Every boundary must have a `failed` snippet with actionable UI (reset button + minimal message minimum)
+- The `pending` snippet renders immediately on the server; `failed` never renders server-side — plan both

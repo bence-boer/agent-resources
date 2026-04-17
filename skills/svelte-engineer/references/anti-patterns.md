@@ -11,7 +11,8 @@
 
 <!-- ✅ -->
 <script lang="ts">
-  let { title }: { title: string } = $props();
+  interface Props { title: string }
+  let { title }: Props = $props();
 </script>
 ```
 
@@ -25,7 +26,8 @@
 
 <!-- ✅ -->
 <script lang="ts">
-  let { on_change }: { on_change?: (value: string) => void } = $props();
+  interface Props { on_change?: (value: string) => void }
+  let { on_change }: Props = $props();
 </script>
 <button onclick={() => on_change?.('new-value')}>
 ```
@@ -142,6 +144,11 @@ export const count_store = new CountStore();
 | `get` from `svelte/store` | Direct property access |
 | `createEventDispatcher` from `svelte` | Callback props |
 | `page` from `$app/stores` | `page` from `$app/state` |
+| `spring()` / `tweened()` from `svelte/motion` | `Spring` / `Tween` classes from `svelte/motion` |
+| `use:action` for new composable DOM enhancements | `{@attach}` from `svelte/attachments` |
+| Raw `addEventListener` inside `$effect` | `on()` from `svelte/events` (no `$effect` needed) |
+| `getContext` / `setContext` with `Symbol` key | `createContext<T>()` from `svelte` (v5.40+) |
+| `import { base } from '$app/paths'` + string concat | `resolve(route, params)` from `$app/paths` |
 
 ### Template String Classes → `cn()`
 ```svelte

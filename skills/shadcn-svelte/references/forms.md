@@ -185,8 +185,8 @@ For client-only validation without a server action:
   const form = superForm(defaults(zod4(formSchema)), {
     validators: zod4(formSchema),
     SPA: true,
-    onUpdate: ({ form: f }) => {
-      if (f.valid) {
+    onUpdate: ({ form: updated_form }) => {
+      if (updated_form.valid) {
         // handle valid form
       }
     },
@@ -308,14 +308,19 @@ The `Field` family is designed for composing accessible form fields without Supe
 
   let department = $state<string>();
 
+  interface Department {
+    value: string;
+    label: string;
+  }
+
   const departments = [
     { value: "engineering", label: "Engineering" },
     { value: "design", label: "Design" },
     { value: "marketing", label: "Marketing" },
-  ];
+  ] as const satisfies Department[];
 
   const departmentLabel = $derived(
-    departments.find((d) => d.value === department)?.label ?? "Choose department"
+    departments.find((department_item) => department_item.value === department)?.label ?? "Choose department"
   );
 </script>
 

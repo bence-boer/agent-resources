@@ -118,16 +118,32 @@ Transform architectural models and specifications into executable artifacts. The
 - Results feed into the defect tracking system
 
 **Implementation Discipline:**
+- Write tests or test specifications before implementing each component — not after
+- At no point during implementation should the system be in a non-passing state for previously completed components. New work may introduce failing tests for new requirements, but must not break existing passing tests
+- A component without passing tests is a draft, not a delivered implementation. "Tests are blocked pending the feature" and "tests will be added in the next pass" are not valid intermediate states
+- Test coverage must trace to requirements via the RTM — tests that do not correspond to a documented requirement are either orphaned or indicate an undocumented requirement that must be added
+- The self-correction loop (implement → test → fix → test) runs at the component level before any integration step
 - Construction is tightly bound by the SDD — deviations require formal change requests
 - Every architectural decision from the SDD governs construction choices
 - Unit tests verify individual component correctness before integration
+
+**Commit Discipline:**
+- Each commit represents one complete logical unit: a coherent, independently meaningful change with a clear, information-dense description. A commit is not a save point or a progress marker
+- Fix commits must be consolidated with the parent commit they repair before integration (via interactive rebase, fixup, or equivalent). A change followed by a chain of "fix", "tweak", or "retry" commits is not a clean commit history and must be rewritten before the branch integrates
+- Commit messages describe the change, not the process: "Add input validation for authentication endpoint" not "More auth work" or "Fix auth again". Messages must pass the repository commit-message convention without exception
+- After every commit, push to the remote immediately. In multi-author or parallel-track environments, unpushed commits create invisible state that causes conflicts when the next work stream begins
+- Commit operations are unconditionally sequential regardless of how many implementation tracks are active — any approach that produces concurrent commits creates ordering conflicts, rebase hazards, and history fragmentation
 
 ### Gate Criteria (Exit)
 
 - [ ] All implementation artifacts have passed structured or formal inspection
 - [ ] Fagan inspection defect logs show all identified defects resolved
 - [ ] Unit tests pass for all completed components
+- [ ] All new components have passing tests written before or alongside implementation — no test-debt deferred
+- [ ] No previously passing tests broken by new commits
 - [ ] SAST reports reviewed — no unaddressed critical or high-severity findings
+- [ ] Commit history is clean: each commit is a complete logical unit, fix chains consolidated
+- [ ] All commits pushed to remote; no local-only commit state
 - [ ] RTM updated — every design element now traces forward to an implementation artifact
 
 ### Scaling Notes

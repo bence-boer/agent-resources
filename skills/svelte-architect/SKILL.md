@@ -46,13 +46,13 @@ If the request becomes file-level, stop at the architectural boundary — file-l
 
 **SvelteKit Architecture:** route groups, layout hierarchy, `+page.server.ts`, `+layout.server.ts`, `hooks.server.ts`, handle chain, `+layout.ts` universal load, `+error.svelte` boundary, `params` matcher, rest parameters, optional parameters, layout reset (`+layout@`), `$app/navigation` (`goto`, `invalidate`, `invalidateAll`), `$app/environment` (`browser`, `building`)
 
-**State Architecture:** `$state` (Svelte 5 rune), `$derived`, `$effect`, Context API (`setContext`/`getContext`), `$app/state` (page, navigating, updated), `.svelte.ts` reactive modules, page-local vs global state, reactive boundaries, fine-grained reactivity, universal vs server load separation
+**State Architecture:** `$state` (Svelte 5 rune), `$derived`, `$effect`, Context API — `createContext<T>()` (v5.40+, replaces Symbol+setContext/getContext), `$app/state` (page, navigating, updated), `.svelte.ts` reactive modules, page-local vs global state, `App.PageState` (shallow routing), reactive boundaries, fine-grained reactivity, universal vs server load separation
 
 **Component Architecture:** Svelte 5 runes, snippet blocks (`{#snippet}`), render delegation (`{@render}`), `{#each}` keyed lists, component composition vs inheritance, `$props()`, `$bindable()`, event forwarding via callback props, slot replacement with snippets
 
 **Design System:** CSS custom properties, Tailwind CSS v4, design tokens (`@theme`), `tailwind-variants`, component variants, `data-slot` convention, `bits-ui` headless primitives, `class` prop merging (`clsx`/`cn`), responsive container queries, dark mode via `color-scheme`
 
-**Data Flow:** server load functions, universal load functions, form actions (`use:enhance`), `ActionData`, `PageData`, progressive enhancement, streaming with `Promise` in load, `fail()` validation errors, `redirect()`, typed API clients (Hono `hc`, generated clients)
+**Data Flow:** server load functions, universal load functions, form actions (`use:enhance`), `ActionData`, `PageData`, progressive enhancement, streaming with `Promise` in load, `fail()` validation errors, `redirect()`, typed API clients (Hono `hc`, generated clients), remote functions (`.remote.ts` — `query`, `command`, `form`, `prerender`; SvelteKit 2.27+ experimental), `refreshAll()` vs `invalidateAll()`, `getRequestEvent()`, shallow routing (`pushState`/`replaceState`), `resolve()`/`match()` from `$app/paths`
 
 **Architectural Principles:** Dependency Rule (Martin), Stable Dependencies Principle (Martin), afferent/efferent coupling, Feature-Sliced Design (FSD), state colocation heuristic, container/presentational separation, compound component pattern, Atomic Design hierarchy (Frost)
 
@@ -139,6 +139,7 @@ Do not introduce extra architectural layers for problems that Svelte 5 and Svelt
 | DI container (tokens, scopes) | `setContext`/`getContext` for component trees; load functions receive injected `event` |
 | Coordinator for routing | SvelteKit file-based routing + `redirect()` + `goto()` |
 | Manual unidirectional dispatch | SvelteKit `load()` → page → form actions → `load()` re-runs |
+| Custom API routes + manual `fetch` for page-level RPC | Remote functions (`.remote.ts`) — typed args, Standard Schema validation, single-flight mutations, auto PE |
 
 If an architecture proposal introduces one of these classic patterns alongside its Svelte-native equivalent, prefer the native mechanism and remove the redundant layer.
 
@@ -150,6 +151,7 @@ Start here unless the task supplies a stronger constraint.
 | --- | --- | --- |
 | App shells | Use top-level route groups by shell or access boundary, usually `(marketing)` + `(app)`; add `(auth)` only if auth screens need a separate shell | You have multiple products, tenants, or admin surfaces |
 | Data reads | Prefer `+page.server.ts` / `+layout.server.ts` so the server stays the source of truth | The feature is browser-only or requires live client polling/subscriptions |
+| Component-colocated RPC | `.remote.ts` `query()` / `command()` / `form()` (experimental, SvelteKit 2.27+ — `kit.experimental.remoteFunctions: true`) | Stable APIs are required or experimental features are a project risk |
 | Mutations | Prefer SvelteKit form actions for app-owned forms and CRUD | The endpoint is consumed externally or is not page-owned |
 | UI state | Keep it local to the page or component that owns the interaction | Multiple distant consumers truly need the same live state |
 | Shared subtree state | Use Context at the compound/root boundary | The state must survive route changes or exist outside one subtree |
@@ -315,7 +317,7 @@ export function createDashboardState(initial: PageData) {
   let data = $derived(/* compute from initial + filters */);
   return {
     get filters() { return filters; },
-    set filters(v) { filters = v; },
+    set filters(value) { filters = value; },
     get data() { return data; }
   };
 }

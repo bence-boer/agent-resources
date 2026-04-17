@@ -24,6 +24,7 @@ See installation instructions for [Popover](popover.md#installation) and [Comman
   import { Button } from "$lib/components/ui/button/index.js";
   import { cn } from "$lib/utils.js";
 
+  interface FrameworkOptionType { value: string; label: string }
   const frameworks = [
     {
       value: "sveltekit",
@@ -45,14 +46,14 @@ See installation instructions for [Popover](popover.md#installation) and [Comman
       value: "astro",
       label: "Astro",
     },
-  ];
+  ] as const satisfies FrameworkOptionType[];
 
   let open = $state(false);
   let value = $state("");
   let triggerRef = $state<HTMLButtonElement>(null!);
 
   const selectedValue = $derived(
-    frameworks.find((f) => f.value === value)?.label
+    frameworks.find((framework) => framework.value === value)?.label
   );
 
   // We want to refocus the trigger button when the user selects

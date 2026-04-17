@@ -65,6 +65,27 @@ Use this guide when choosing an adapter, planning advanced routing, or designing
 - **Mechanism:** Define `transport` in `hooks.js` with encode/decode pairs.
 - **Architectural decision:** Keep transport types minimal — prefer plain serializable data in load functions.
 
+### `resolve()` and `match()` from `$app/paths`
+
+- **`resolve(route, params?)`** — constructs a typed URL for a given route ID with `base` prepended automatically. Replaces manual `` `${base}/path` `` concatenation.
+  ```ts
+  import { resolve } from '$app/paths';
+  const href = resolve('/blog/[slug]', { slug: 'hello-world' });
+  ```
+- **`match(path)`** (v2.52+) — resolves a URL path to a typed route ID and params at runtime. Useful for analytics, preloading, or conditional behaviour based on the current URL without regex.
+
+**Architectural decision:** Prefer `resolve()` over `` `${base}/${path}` `` in all new code. Eliminates a class of base-URL bugs in subdirectory deployments.
+
+### Shallow routing — `pushState` / `replaceState`
+
+Use `pushState` / `replaceState` (from `$app/navigation`) when UI state should be URL-addressable but must NOT trigger `load` functions (modals, drawers, detail sidepanels, photo galleries).
+
+- Declare the state shape in `app.d.ts` under `App.PageState`
+- Read from `page.state` (from `$app/state`) in the component
+- Use `history.back()` to dismiss — preserves browser forward/back naturally
+
+**Architectural decision:** Distinguish "new page" navigation (`goto`) from "overlay UI" navigation (`pushState`). Conflating them causes either load-function thrashing or broken deep links.
+
 ---
 
 ## 3. Hook Composition Strategy

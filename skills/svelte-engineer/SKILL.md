@@ -39,6 +39,8 @@ Read only what matches the change surface.
 - rune logic, Context, or shared state -> [state-reactivity](references/state-reactivity.md)
 - routes, loads, actions, hooks, or invalidation -> [sveltekit-patterns](references/sveltekit-patterns.md)
 - typing, schemas, or frontend/backend contracts -> [typescript-patterns](references/typescript-patterns.md)
+- `{@attach}`, `fromAction()`, function bindings, `<svelte:boundary>`, `ClassValue`, style/`:global` directives -> [attachments-and-directives](references/attachments-and-directives.md)
+- `createContext`, `Spring`/`Tween`, `MediaQuery`, `SvelteMap`/`Set`, `on()`, `tick`, `createSubscriber`, `fork` -> [svelte-api-modules](references/svelte-api-modules.md)
 - migration or review of old code -> [anti-patterns](references/anti-patterns.md)
 - Tailwind v4 CSS-first config, dark mode, utilities -> [tailwind-v4-patterns](references/tailwind-v4-patterns.md)
 - lazy loading, prefetch, images, fonts, bundle analysis, CWV -> [performance-patterns](references/performance-patterns.md)
@@ -46,10 +48,11 @@ Read only what matches the change surface.
 ## Expert vocabulary
 
 - **Rune system**: `$props()`, `$derived`, `$derived.by`, `$state`, `$state.raw`, `$state.snapshot`, `$state.eager`, `$effect`, `$effect.pre`, `$effect.tracking`, `$effect.root`, `$bindable`, `$inspect`, `$props.id`, rune, fine-grained reactivity, function bindings (`bind:value={() => val, setter}`)
-- **Component surface**: snippet, `{@render}`, `data-slot`, class prop, `cn()` (clsx + twMerge), `tv()` (tailwind-variants, Joe Bell), bits-ui, Formsnap
-- **SvelteKit data flow**: `+page.server.ts`, `+layout.server.ts`, load function, actions, `use:enhance`, `invalidate`, `depends`, `depends()`, `$app/state`, `handleFetch`, `transformPageChunk`, `filterSerializedResponseHeaders`, `preloadData`, `preloadCode`, `data-sveltekit-preload-data`, `getRequestEvent`, `sequence()` hook composition, `transport` hook
+- **Component surface**: snippet, `{@render}`, `data-slot`, class prop, `ClassValue` (from `svelte/elements`), `cn()` (clsx + twMerge), `tv()` (tailwind-variants, Joe Bell), bits-ui, Formsnap, `{@attach}`, `fromAction()` (svelte/attachments), `svelte:boundary` (`onerror`, `failed`/`pending` snippets)
+- **SvelteKit data flow**: `+page.server.ts`, `+layout.server.ts`, load function, actions, `use:enhance`, `invalidate`, `depends`, `$app/state`, `handleFetch`, `transformPageChunk`, `filterSerializedResponseHeaders`, `preloadData`, `preloadCode`, `data-sveltekit-preload-data`, `getRequestEvent`, `sequence()` hook composition, `transport` hook, remote functions (`.remote.ts`, `query`, `command`, `form`, `prerender`), `refreshAll()`, `pushState`, `replaceState`, `App.PageState`, `onNavigate`, `resolve()` from `$app/paths`, `match()` (v2.52+)
 - **Styling / variants**: tailwind-variants, clsx + twMerge, CSS custom properties, Tailwind v4, `@utility`, `@custom-variant`, `@theme` block, `@source` directive, `@plugin` directive, `@import "tailwindcss"`, Lightning CSS (`cssMinify: 'lightningcss'`)
-- **Migration**: Svelte 4→5, `export let` → `$props()`, stores → runes, `<slot>` → snippet, `$app/stores` → `$app/state`
+- **Svelte API modules**: `createContext<T>()` (v5.40+, module-scope only), `on()` from `svelte/events`, `Spring`/`Tween` classes (v5.8+), `MediaQuery` from `svelte/reactivity`, `SvelteMap`/`SvelteSet`/`SvelteDate`/`SvelteURL`, `svelte/reactivity/window`, `createSubscriber`, `toStore`/`fromStore`, `fork`/`Fork` (v5.42+), `getAbortSignal()`, `settled()` (v5.36+), `$effect.pending`, `untrack`, `tick`, `flushSync`, `prefersReducedMotion`
+- **Migration**: Svelte 4→5, `export let` → `$props()`, stores → runes, `<slot>` → snippet, `$app/stores` → `$app/state`, `spring()`/`tweened()` → `Spring`/`Tween`, `getContext/setContext+Symbol` → `createContext<T>()`, `use:action` → `{@attach}`
 - **Debugging & Performance**: `$inspect`, `DEBUG=vite:*`, `DEBUG=kit:*`, `css: { devSourcemap: true }`, `rollup-plugin-visualizer`, `web-vitals`, `requestIdleCallback`, `IntersectionObserver` lazy loading
 
 ## Anti-pattern watchlist
@@ -62,11 +65,76 @@ Read only what matches the change surface.
 6. **Missing type imports** — using `import { X }` for types instead of `import type { X }` with `verbatimModuleSyntax` enabled. Fix: use `import type` for pure types; keep value imports for enums, const maps, and runtime helpers.
 7. **Runes in SSR context** — using `$state` or `$effect` in code that runs server-side (e.g., top-level module scope executed during SSR, or inside `+page.server.ts`). Detection: runtime error "$state is not defined" or silent SSR mismatch. Fix: confine `$state` and `$effect` to `.svelte` and `.svelte.ts` files; use load function data for server-derived values.
 8. **Dynamic Tailwind class interpolation** — constructing class names with template literals like `bg-${color}-500`. Detection: classes missing in production after CSS purging. Fix: always use complete class names; for truly dynamic values, use CSS custom properties with `style:` directive.
-9. **`@apply` in scoped styles** — using Tailwind's `@apply` inside a component's `<style>` block. Detection: `@apply` directive errors or missing styles. Fix: define custom utilities in `app.css` using `@utility name { ... }` or `@layer components { ... }`, then use the class name in templates.
+9. **Scoped `<style>` for utility-available concerns** — using `<style>` blocks with `@apply` or data-attribute selectors (`[data-state="active"] { ... }`) when Tailwind utilities or data-variants exist. Fix: use `data-[state=active]:bg-primary` inline, `@custom-variant` in `app.css`, or `@utility` blocks. Reserve `<style>` for CSS with no utility equivalent.
+10. **Module-scope remote query** — calling a `.remote.ts` `query()` at module scope (e.g., `const todos = get_todos(...)` at the top of a `.ts` file). Remote queries must be anchored to a reactive context (component script, `$derived`, `$effect`) to be tracked and garbage-collected. Detection: query defined outside any component or reactive scope. Fix: move inside a component script or wrap in `$derived`.
+
+## Core design principles
+
+Three principles guide every implementation decision in this skill.
+
+- **Locality of Behavior** — code should be self-explanatory from local context. Side effects, state mutations, and logic should live near the code that causes them. Avoid spooky action at a distance: a reader at any call site should understand what happens without jumping to distant modules.
+- **Composition over Inheritance** — compose behaviours via snippets, stores, context, and flat utilities. Prefer small, focused building blocks over class hierarchies. A component that needs new behaviour gets a new collaborator, not a new base class.
+- **Data Immutability** — state lives at the narrowest scope that owns it. Prefer `$state.raw` + wholesale replacement over mutating objects in-place and passing mutable references around. Derive new values; do not mutate and re-share.
+
+## Promise chains over try/catch
+
+Do not wrap `await` in `try { } catch { }`. Use `.then().catch()` promise chains for async error handling.
+
+```ts
+// ❌ try/catch wrapping await
+async refresh() {
+  this.is_loading = true;
+  try {
+    const response = await client.api.todos.$get();
+    this.todo_list = await response.json();
+  } catch (error) {
+    this.error_message = error instanceof Error ? error.message : 'Failed to load';
+  } finally {
+    this.is_loading = false;
+  }
+}
+```
+
+```ts
+// ✅ promise chain — no try/catch
+refresh(): Promise<void> {
+  this.is_loading = true;
+  return client.api.todos.$get()
+    .then((response) => response.json())
+    .then((data: Todo[]) => { this.todo_list = data; })
+    .catch((error: unknown) => {
+      this.error_message = error instanceof Error ? error.message : 'Failed to load';
+    })
+    .finally(() => { this.is_loading = false; });
+}
+```
+
+## Switch exhaustiveness
+
+When branching on an enum or closed string domain with three or more branches, use `switch` with a `default` that asserts the remaining value is `never`. TypeScript then catches any missing cases at compile time.
+
+```ts
+// ✅ exhaustive switch — compile error if a FilterStatus case is added without updating this
+switch (filter_status) {
+  case FilterStatus.ALL:    return todos;
+  case FilterStatus.ACTIVE: return todos.filter((todo) => !todo.done);
+  case FilterStatus.DONE:   return todos.filter((todo) => todo.done);
+  default: throw new Error(`Unhandled FilterStatus: ${filter_status satisfies never}`);
+}
+```
+
+For simple value → value lookups with no branching logic, use an `as const satisfies` lookup object instead of a switch:
+
+```ts
+// ✅ lookup object for simple key→value mapping
+const STATUS_LABEL = {
+  [FilterStatus.ALL]:    'All items',
+  [FilterStatus.ACTIVE]: 'Active',
+  [FilterStatus.DONE]:   'Completed',
+} as const satisfies Record<FilterStatus, string>;
+```
 
 ## File placement defaults
-
-Choose the narrowest file that can own the change.
 
 | If you are changing... | Default file | Do not default to |
 | --- | --- | --- |
@@ -94,6 +162,9 @@ These are implementation boundaries, not stylistic preferences.
 - Use arrays in `tv()` and multi-line template classes once a class list stops being readable on one line.
 - Use enums for closed string domains such as variants, sizes, modes, and statuses. Enum members use `SCREAMING_SNAKE_CASE`; enum values stay kebab-case.
 - Use `type` imports and exports only for true types. Enums, const maps, variant helpers, and other runtime values stay value imports and exports.
+- Use promise chains (`.then().catch()`) instead of `try { await } catch` for async error handling. Never wrap an `await` in a `try/catch` block.
+- When branching on an enum or closed-domain variable with three or more cases, use `switch` with `default: throw new Error(\`Unhandled: \${variable satisfies never}\`)` exhaustiveness guard. For simple value-to-value mapping use an `as const satisfies Record<EnumType, ValueType>` lookup object.
+- ALL compile-time constant object and array literals must use `as const satisfies SpecificType`. Neither `as const` alone nor `satisfies` alone is sufficient.
 
 ## Extended rune API
 
@@ -278,21 +349,21 @@ export const dashboard_store = new DashboardStore();
 ```ts
 // ✅ Page-scoped Context — state lives and dies with the page
 // routes/dashboard/dashboard-context.svelte.ts
-import { setContext, getContext } from 'svelte';
+import { createContext } from 'svelte';
 
-const DASHBOARD_KEY = Symbol('dashboard');
+enum FilterStatus {
+  ALL = 'all',
+  ACTIVE = 'active',
+  DONE = 'done',
+}
 
 class DashboardState {
-  filter = $state('all');
+  filter = $state<FilterStatus>(FilterStatus.ALL);
+  set_filter(new_filter: FilterStatus): void { this.filter = new_filter; }
 }
 
-export function set_dashboard_context() {
-  return setContext(DASHBOARD_KEY, new DashboardState());
-}
-
-export function use_dashboard_context() {
-  return getContext<DashboardState>(DASHBOARD_KEY);
-}
+// createContext<T>() — typed [get, set] tuple; get() throws loudly if no parent called set
+export const [get_dashboard_context, set_dashboard_context] = createContext<DashboardState>();
 ```
 
 ## Questions this skill answers

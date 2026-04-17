@@ -2,6 +2,23 @@
 
 Phases 1–2 of the software development lifecycle. These phases define the project's scope and specify what must be built before any design or construction begins.
 
+## Documentation Discipline
+
+Documentation is not a log. Every document in the project must describe the current state of its subject as it stands now — not how it came to be, what was tried before, what problems were encountered, or what has changed since the beginning.
+
+**Rolling Documentation Protocol** — applicable to all project documentation:
+- When information is superseded, overwrite the old text immediately — do not append a correction, amendment, or "as of [date]" note
+- When a plan has been executed, remove it from active plans — completed work has no future relevance in a plan document
+- When a known issue is resolved, remove it from issue lists — it is no longer an issue
+- When a specification changes, the document should read as the current specification, not the original plus a list of amendments
+- When a section contains information that was relevant only during active development but has since been superseded, remove it
+
+A developer or agent reading the document should be able to understand the current state of the system from it without any prior context, without having to mentally subtract obsolete sections, and without needing to trace a history of changes.
+
+All project documentation is dry, factual, and to the point. No motivational framing, no narrative of how the project reached its current state, no hedge language, no process commentary. Each sentence conveys information that would be lost if the sentence were removed.
+
+---
+
 ## Phase 1: Project Initiation, Agreement, and System Breakdown
 
 ### Purpose
@@ -33,6 +50,7 @@ Formalize the administrative, financial, and structural constraints within which
 | Work Breakdown Structure (WBS) | Product-oriented decomposition of scope into quantifiable deliverables, governed by the one-hundred-percent rule |
 | Resource Allocation Matrix | Maps work packages to responsible roles and resource commitments |
 | Customer-Supplier Agreement | Formal ratification of scope, deliverables, timeline, and acceptance criteria |
+| Documentation Manifest | A README.md in the documentation root that describes the folder structure, states the documentation discipline (current-state description, immediate removal of stale content, working directory boundary), defines how agents and developers find relevant context and recognize stale entries, and identifies the working directory. The manifest is itself subject to the documentation discipline: it describes current structure, not history. |
 
 ### Key Procedures
 
@@ -46,6 +64,7 @@ Formalize the administrative, financial, and structural constraints within which
 - Documents project organizational structure, required engineering environment, management of safety and security characteristics
 - Serves as the administrative governing document for the project's duration
 - Must incorporate centralized oversight mechanisms in regulated environments
+- **Working directory convention:** Designate one directory within the documentation root as the working directory for rolling development state (e.g., `docs/plans`). This directory holds active plans, in-progress investigations, and temporary analysis artifacts. The same removal discipline applies: entries are removed as soon as the work they describe is complete. The working directory must not become a permanent archive of old plans.
 
 ### Gate Criteria (Exit)
 
@@ -54,6 +73,9 @@ Formalize the administrative, financial, and structural constraints within which
 - [ ] Resource allocation matrix complete
 - [ ] Customer-supplier agreement signed
 - [ ] Risk management protocols defined and documented
+- [ ] Documentation manifest (README.md) exists in the project documentation root
+- [ ] Manifest describes folder structure, documentation discipline, and working directory boundary
+- [ ] No documentation files contain resolved issues, executed plans, or superseded specifications (enforced from project initiation onward)
 
 ### Scaling Notes
 

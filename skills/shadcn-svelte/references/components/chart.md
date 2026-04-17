@@ -98,6 +98,7 @@ The following data represents the number of desktop and mobile users for each mo
 
 ```svelte title="lib/components/example-chart.svelte" showLineNumbers
 <script lang="ts">
+  interface ChartDataPointType { month: string; desktop: number; mobile: number }
   const chartData = [
     { month: "January", desktop: 186, mobile: 80 },
     { month: "February", desktop: 305, mobile: 200 },
@@ -105,7 +106,7 @@ The following data represents the number of desktop and mobile users for each mo
     { month: "April", desktop: 73, mobile: 190 },
     { month: "May", desktop: 209, mobile: 130 },
     { month: "June", desktop: 214, mobile: 140 },
-  ];
+  ] as const satisfies ChartDataPointType[];
 </script>
 ```
 
@@ -126,7 +127,7 @@ The chart config holds configuration for the chart. This is where you place huma
       label: "Mobile",
       color: "#60a5fa",
     },
-  } satisfies Chart.ChartConfig;
+  } as const satisfies Chart.ChartConfig;
 </script>
 ```
 
@@ -172,7 +173,7 @@ The `props` prop is how you can pass custom props to the various components that
     ]}
     props={{
       xAxis: {
-        format: (d) => d.slice(0, 3),
+        format: (month_label) => month_label.slice(0, 3),
       },
     }}
   />
@@ -211,7 +212,7 @@ We'll replace the `tooltip={false}` prop with the `tooltip` snippet where we'll 
     ]}
     props={{
       xAxis: {
-        format: (d) => d.slice(0, 3),
+        format: (month_label) => month_label.slice(0, 3),
       },
     }}
   >
@@ -251,7 +252,7 @@ The `legend` prop is used to show a legend for the chart. We are working with La
     ]}
     props={{
       xAxis: {
-        format: (d) => d.slice(0, 3),
+        format: (month_label) => month_label.slice(0, 3),
       },
     }}
   >
@@ -292,7 +293,7 @@ This allows you to share config and color tokens between charts. It can also wor
         dark: "#dc2626",
       },
     },
-  } satisfies Chart.ChartConfig;
+  } as const satisfies Chart.ChartConfig;
 </script>
 ```
 
@@ -335,7 +336,7 @@ Charts has built-in support for theming. You can use css variables (recommended)
       label: "Mobile",
       color: "var(--chart-2)",
     },
-  } satisfies Chart.ChartConfig;
+  } as const satisfies Chart.ChartConfig;
 </script>
 ```
 
@@ -350,7 +351,7 @@ You can also define your colors directly in the chart config. Use the color form
       label: "Desktop",
       color: "#2563eb",
     },
-  } satisfies Chart.ChartConfig;
+  } as const satisfies Chart.ChartConfig;
 </script>
 ```
 
@@ -367,10 +368,11 @@ To use the theme colors in your chart, reference the colors using the format `va
 #### Chart Data
 
 ```ts showLineNumbers
+interface BrowserChartDataPointType { browser: string; visitors: number; color: string }
 const chartData = [
   { browser: "chrome", visitors: 275, color: "var(--color-chrome)" },
   { browser: "safari", visitors: 200, color: "var(--color-safari)" },
-];
+] as const satisfies BrowserChartDataPointType[];
 ```
 
 #### Tailwind
@@ -414,10 +416,11 @@ To use a custom key for tooltip label and names, use the `labelKey` and `nameKey
 
 ```svelte showLineNumbers /browser/
 <script lang="ts">
+  interface BrowserChartDataPointType { browser: string; visitors: number; color: string }
   const chartData = [
     { browser: "chrome", visitors: 187, color: "var(--color-chrome)" },
     { browser: "safari", visitors: 200, color: "var(--color-safari)" },
-  ];
+  ] as const satisfies BrowserChartDataPointType[];
 
   const chartConfig = {
     visitors: {
@@ -431,7 +434,7 @@ To use a custom key for tooltip label and names, use the `labelKey` and `nameKey
       label: "Safari",
       color: "var(--chart-2)",
     },
-  } satisfies ChartConfig;
+  } as const satisfies ChartConfig;
 </script>
 
 <Chart.Tooltip labelKey="visitors" nameKey="browser" />

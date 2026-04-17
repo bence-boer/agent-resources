@@ -67,6 +67,7 @@ ui/
     },
   });
 
+  // class prop is typed ClassValue (from HTMLButtonAttributes) — accepts string | object | array
   export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
     WithElementRef<HTMLAnchorAttributes> & {
       variant?: ButtonVariant;
@@ -153,6 +154,21 @@ export {
 import { Button, ButtonVariant } from '$lib/components/ui';
 ```
 
+## Compound component barrels
+
+Multi-part components export each subcomponent's default via `export { default as Name }`:
+
+```ts
+// ui/page-hero/index.ts
+export { default as Root } from './page-hero.svelte';
+export { default as Content } from './page-hero-content.svelte';
+export { default as Aside } from './page-hero-aside.svelte';
+// ⚠️ NEVER: export * as Root — exports the module namespace object,
+// not the component. Breaks ConstructorOfATypedSvelteComponent.
+```
+
+Consumer uses namespace import: `import * as PageHero from '$lib/components/ui/page-hero'` → `<PageHero.Root>`, `<PageHero.Content>`, `<PageHero.Aside>`.
+
 ## Wrapping Headless Primitives (bits-ui)
 
 ```svelte
@@ -186,6 +202,16 @@ import { Button, ButtonVariant } from '$lib/components/ui';
 - Add `data-slot` attribute for CSS targeting
 - `class_name` always goes last in `cn()` for consumer overrides
 
+## DOM Attachments (`{@attach}`)
+
+For composable DOM enhancements that must forward through component props, use `{@attach}` instead of `use:action`:
+
+```svelte
+<button {@attach tooltip('Save')}>Save</button>
+```
+
+`{@attach}` is Symbol-keyed and passes transparently through `{...rest_props}` spreads. See [attachments-and-directives.md](attachments-and-directives.md) for the factory pattern, `fromAction()` migration adapter, and anti-patterns.
+
 ## data-slot Convention
 
 Every component gets `data-slot` matching its semantic name:
@@ -196,6 +222,20 @@ Every component gets `data-slot` matching its semantic name:
     <h3 data-slot="card-title">{@render title?.()}</h3>
   </div>
   <div data-slot="card-content">{@render children?.()}</div>
+</div>
+```
+
+### Layout adaptation via :has() + data-slot
+
+When a parent's layout depends on which children are rendered, use CSS `:has([data-slot=...])` instead of Context (Context template props evaluate before `{@render children()}` runs — broken on SSR). In Tailwind: `has-[[data-slot=page-hero-aside]]:grid-cols-[1fr_auto]` on the parent. Specificity (0,1,1) beats base utility (0,0,1), so it naturally overrides without `!important`. Fully SSR-safe — no JS, no hydration mismatch.
+
+```svelte
+<div class={cn(
+  'flex flex-col max-w-4xl mx-auto text-center',
+  'has-[[data-slot=aside]]:max-w-none has-[[data-slot=aside]]:lg:grid has-[[data-slot=aside]]:lg:grid-cols-[1fr_auto]',
+  class_name
+)}>
+  {@render children?.()}
 </div>
 ```
 
@@ -217,6 +257,16 @@ Every component gets `data-slot` matching its semantic name:
   {@render children?.()}
   {#if footer}{@render footer({ count: item_count })}{/if}
 </div>
+```
+
+## Dynamic components from data
+
+Render components stored in data objects via property access — avoids intermediate PascalCase variables that violate snake_case lint rules:
+
+```svelte
+{#each steps as step (step.title)}
+  <step.icon size={24} class="text-primary" />
+{/each}
 ```
 
 ## Render Delegation Types
@@ -243,6 +293,10 @@ Always use `cn()` = `twMerge(clsx(...))`, `class_name` last. **Never** use templ
 )}>
 ```
 
+**twMerge group caveat:** `twMerge` only resolves conflicts within the same Tailwind group. `font-bold` (font-weight) and `font-modak` (font-family) are different groups — both apply when composed. Don't lock shared component variants to a font-weight if consumers may need a different font-family that carries its own weight.
+
+Type class props as `ClassValue` (from `svelte/elements`) — accepts `string | Record<string, boolean> | ClassValue[] | null | undefined`. See [attachments-and-directives.md](attachments-and-directives.md) for the full `ClassValue` pattern.
+
 ## Long class lists
 
 Keep long Tailwind lists readable:
@@ -250,4 +304,50 @@ Keep long Tailwind lists readable:
 - Use arrays in `tv()` once base or variant strings start mixing layout, typography, interaction, and accessibility rules.
 - Break long template `class=""` values across lines with aligned indentation.
 - Keep reusable tokens, `@utility` classes, and shared `@custom-variant` selectors in `app.css`; keep component-specific visual decisions in the component. See [tailwind-v4-patterns.md](tailwind-v4-patterns.md#custom-utilities) for `@utility` and `@custom-variant` syntax.
+
+## Error and Async Boundaries (`<svelte:boundary>` — v5.3+)
+
+`<svelte:boundary>` catches errors and async failures in its child tree. Place boundaries:
+- At each async component surface where pending/error states need distinct UI
+- Around data-rich subtrees to isolate failures from the rest of the page
+- As close to the failure point as practical — one global catch-all is an anti-pattern
+
+```svelte
+<script lang="ts">
+  let boundary_error = $state<unknown>(null);
+  let reset_fn = $state<(() => void) | null>(null);
+</script>
+
+<svelte:boundary
+  onerror={(err, reset) => {
+    boundary_error = err;
+    reset_fn = reset;
+    // Log to monitoring — err is unknown, not Error, sanitize before logging
+  }}
+>
+  <AsyncUserPanel user_id={user.id} />
+
+  {#snippet failed(error, reset)}
+    <div role="alert" class="rounded-lg border border-destructive p-4">
+      <p class="text-destructive">
+        {error instanceof Error ? error.message : 'Something went wrong'}
+      </p>
+      <button class="mt-2 text-sm underline" onclick={reset}>Try again</button>
+    </div>
+  {/snippet}
+
+  {#snippet pending()}
+    <div class="animate-pulse rounded-lg bg-muted h-32" aria-busy="true" />
+  {/snippet}
+</svelte:boundary>
+```
+
+Props:
+- `onerror={(error: unknown, reset: () => void) => void}` — externalises error for monitoring/logging
+- `failed` snippet — `(error: unknown, reset: () => void)` — rendered when the boundary catches
+- `pending` snippet — rendered during initial `await` resolution inside the boundary
+
+**SSR note:** The `pending` snippet renders immediately on the server (server always renders synchronously). `failed` is never rendered on the server — errors during SSR propagate normally. Sanitize error objects before rendering in `failed` — never expose internal stack traces.
+
+> Syntax-only quick reference: [attachments-and-directives.md](attachments-and-directives.md).
 

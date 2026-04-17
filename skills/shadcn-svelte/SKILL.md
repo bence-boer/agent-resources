@@ -19,7 +19,7 @@ Composable, themeable UI components for Svelte 5 built on Bits UI and Tailwind C
 
 ## Expert vocabulary
 
-**Component system:** data-slot attributes, class prop merging, `cn()` utility (clsx + tailwind-merge), `tv()` component variants (tailwind-variants), `VariantProps`, compound component barrel exports, namespace imports
+**Component system:** data-slot attributes, class prop merging, `ClassValue` type (from `svelte/elements`, v5.19+ — accepts `string | Record<string, boolean> | ClassValue[] | null | undefined`), `cn()` utility (clsx + tailwind-merge), `tv()` component variants (tailwind-variants), `VariantProps`, compound component barrel exports, namespace imports
 
 **Styling:** CSS custom properties, HSL/OKLCH design tokens, Tailwind CSS v4, `@theme` directive, `--color-*` variables, `.dark` class strategy, `color-scheme`, base colors (zinc, slate, stone, neutral, gray)
 
@@ -70,6 +70,14 @@ Read only the reference that matches the task.
 ### 5. Overriding component internals
 **Detection:** Directly editing scaffolded component source files to change behavior, or reaching into internal DOM structure.
 **Resolution:** Extend through composition and the `class` prop. Wrap components, pass `class={cn(baseStyles, className)}`, or create new variants in `tv()`. Edit source only when the component genuinely needs a structural change, not for one-off styling.
+
+### 6. Using `export * as` in component barrel files
+**Detection:** Barrel file uses `export * as Root from "./dialog.svelte"` instead of `export { default as Root } from "./dialog.svelte"`. TypeScript reports `ConstructorOfATypedSvelteComponent` mismatches; components cannot be used as `<Component.Root>`.
+**Resolution:** Always use `export { default as X }` to re-export the component's default export. `export * as X` exports the entire module namespace object, not the Svelte component — it is syntactically close but semantically wrong.
+
+### 7. Inline styles for data-attribute state
+**Detection:** Component uses a `<style>` block with selectors like `[data-state="active"]` for state-based styling instead of utility classes.
+**Resolution:** Use Tailwind's data-attribute variants: `data-[state=active]:bg-primary data-[state=active]:text-primary-foreground`. Inline style blocks break class-prop overrides via `cn()`, create specificity conflicts, and split the styling source of truth.
 
 ## Component conventions
 
@@ -153,6 +161,8 @@ Always merge user classes with `cn()`:
 </button>
 ```
 
+**`cn()` limitation:** tailwind-merge resolves conflicts within the same class group (e.g., `bg-red-500` overrides `bg-blue-500`), but classes from different groups always coexist. `font-bold` (weight) and `font-sans` (family) are separate groups — a component that sets font-family through `cn()` cannot have it overridden via the `class` prop.
+
 ### Component anatomy pattern
 
 Compound components export sub-parts from a barrel file:
@@ -167,6 +177,8 @@ export { default as Footer } from "./dialog-footer.svelte";
 export { default as Title } from "./dialog-title.svelte";
 export { default as Description } from "./dialog-description.svelte";
 ```
+
+For layout that adapts to which sub-parts are rendered, use CSS `:has()` with `data-slot` selectors on the parent. Example: `has-[[data-slot=page-hero-aside]]:grid-cols-[1fr_auto]` switches a hero to two-column layout when an Aside child is present. This is SSR-safe and requires no JavaScript or context.
 
 ## Notes on component docs
 

@@ -284,7 +284,8 @@ We'll start by defining the actions menu in our `data-table-actions.svelte` comp
   import { Button } from "$lib/components/ui/button/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
-  let { id }: { id: string } = $props();
+  interface Props { id: string }
+  let { id }: Props = $props();
 </script>
 
 <DropdownMenu.Root>
