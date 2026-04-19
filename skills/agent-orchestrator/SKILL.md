@@ -1,17 +1,19 @@
 ---
 name: agent-orchestrator
 description: >
-  Prompt engineering and multi-agent orchestration framework for software modification
-  pipelines. Covers execution-ready prompt design (chain-of-thought, few-shot, structured
-  output forcing), task decomposition into Directed Acyclic Graphs, orchestration pattern
-  selection (sequential, parallel, hierarchical, blackboard), Brain/Heart architecture
-  separation, Git worktree conflict isolation, interleaved verification loops, and agent
-  dispatch coordination. Use when writing agent prompts, orchestrating multi-agent workflows,
-  decomposing tasks for agent swarms, designing verification pipelines, or delegating subtasks.
-  Trigger on any agent prompt, orchestration, or multi-agent coordination task — even informal
-  ("help me phrase this", "write a better prompt", "coordinate these agents", "break this into
-  tasks"). Do NOT use for creating agent profiles (.agent.md — use Agent Creator), creating
-  skills (use Skill Creator), or general creative writing.
+  Multi-agent orchestration and prompt engineering framework for complex task
+  pipelines. Covers task decomposition into Directed Acyclic Graphs, orchestration
+  pattern selection (sequential, parallel, hierarchical, blackboard), Brain/Heart
+  architecture separation, workspace isolation for parallel agents,
+  specification-first pipeline design, interleaved verification loops,
+  execution-ready prompt design (chain-of-thought, few-shot, structured output
+  forcing), and agent dispatch coordination. Use when orchestrating multi-agent
+  workflows, decomposing tasks for agent swarms, writing agent prompts, designing
+  verification pipelines, or delegating subtasks. Trigger on any orchestration,
+  multi-agent coordination, or agent prompt task — even informal ("coordinate
+  these agents", "break this into tasks", "write a better prompt", "help me
+  phrase this"). Do NOT use for creating agent profiles or skill definitions
+  (those have dedicated skills), or general creative writing.
 ---
 
 # Agent Orchestrator
@@ -24,7 +26,7 @@ Write execution-ready agent prompts and design multi-agent orchestration pipelin
 
 **Task Decomposition & Orchestration:** task decomposition (Khot et al.), Directed Acyclic Graph (DAG), subtask delegation, fan-out/fan-in delegation, atomic task, definition of done, Brain/Heart separation, sequential pipeline, parallel execution, hierarchical routing, blackboard pattern (Engelmore & Morgan)
 
-**Conflict Resolution & State:** Git worktree isolation, merge integration point, dialectical negotiation, semantic deduplication
+**Conflict Resolution & State:** workspace isolation, convergence point, dialectical negotiation, semantic deduplication
 
 **Evaluation & Constraints:** acceptance criteria, interleaved verification loop, generator-evaluator harness, deterministic check, exit criteria, negative constraints, scope fencing
 
@@ -34,66 +36,82 @@ Write execution-ready agent prompts and design multi-agent orchestration pipelin
 
 ### 1. Wish Prompt
 **Detection:** Prompt uses "improve," "fix," "make better," "clean up" without a measurable target or end-state.
-**Resolution:** Replace vague verb with specific outcome + observable metric. "Fix the auth" → "Make `POST /login` return 200 with valid JWT when given correct credentials, and 401 otherwise."
+**Resolution:** Replace vague verb with specific outcome + observable metric. "Fix the analysis" → "Recompute all totals in the Q3 report so every row sum matches the column total within ±0.01."
 
 ### 2. Context Dump
 **Detection:** Prompt pastes entire files, full docs, or long logs without indicating which parts matter.
-**Resolution:** Excerpt only relevant sections; annotate each excerpt with its purpose ("this config shows the current DB connection; the agent must change the `host` field").
+**Resolution:** Excerpt only relevant sections; annotate each excerpt with its purpose ("this section shows the current pricing structure; the agent must update the discount tiers").
 
 ### 3. Missing Escape Hatch
 **Detection:** No fallback behavior for when the agent gets stuck, hits ambiguity, or encounters unexpected state.
-**Resolution:** Add explicit blocker-handling: "If X is unclear, do Y. If build fails after 3 attempts, stop and report the exact error and what you tried."
+**Resolution:** Add explicit blocker-handling: "If X is unclear, do Y. If the approach fails after 3 attempts, stop and report the exact blocker and what you tried."
 
 ### 4. Implicit Scope
 **Detection:** No explicit in-scope / out-of-scope boundaries; agent must guess what it may touch.
-**Resolution:** Add scope block listing included surfaces and explicit exclusions. "In scope: `src/auth/**`, auth tests. Out of scope: database migrations, CI config."
+**Resolution:** Add scope block listing included surfaces and explicit exclusions. "In scope: competitor pricing data, discount formulas. Out of scope: branding guidelines, customer communications."
 
 ### 5. Test-Free Done
 **Detection:** Definition of done has no verifiable checks — just "make sure it works" or "it should be correct."
-**Resolution:** Add concrete verification: lint/build/test commands, expected exit codes, curl commands with expected responses, or CI status checks.
+**Resolution:** Add concrete verification: specific validation checks, expected outputs, acceptance criteria, or automated gates that produce pass/fail evidence.
 
 ### 6. Premature Serialization
 **Detection:** Orchestrator defaults to purely sequential pipeline when tasks are demonstrably independent, destroying parallelism advantages.
-**Resolution:** Analyze the dependency graph explicitly. Tasks with no shared dependencies or file paths execute in parallel.
+**Resolution:** Analyze the dependency graph explicitly. Tasks with no shared dependencies execute in parallel.
 
 ### 7. Vague Delegation
-**Detection:** Tasks dispatched to sub-agents without explicit scope boundaries, context paths, or verifiable completion criteria.
-**Resolution:** Every dispatched task must include: assignee role, dependency list, context paths, execution strategy, and definition of done.
+**Detection:** Tasks dispatched to sub-agents without explicit scope boundaries, context references, or verifiable completion criteria.
+**Resolution:** Every dispatched task must include: assignee role, dependency list, context references, execution strategy, and definition of done.
 
 ### 8. Fire-and-Forget Execution
 **Detection:** Entire task queue dispatched without intermediate verification — errors compound silently through subsequent steps.
 **Resolution:** Enforce interleaved verification: no task N+1 begins until task N passes its verification gate.
 
 ### 9. Shared-Workspace Conflicts
-**Detection:** Multiple parallel agents edit files in the same working directory, causing overwrite races and context bleeding.
-**Resolution:** Assign each parallel agent its own Git worktree with an isolated branch. Merge at a single integration point after all agents pass local verification.
+**Detection:** Multiple parallel agents edit artifacts in the same workspace, causing overwrite races and context bleeding.
+**Resolution:** Assign each parallel agent its own isolated workspace. Converge at a single integration point after all agents pass local verification.
 
 ### 10. Over-Parallelization
-**Detection:** More than 3–5 parallel implementation agents active simultaneously on the same codebase.
-**Resolution:** Cap parallel agents at 3–5. Beyond this threshold, merge conflicts overwhelm the integration step, negating speed gains.
+**Detection:** More than 3–5 parallel agents active simultaneously on the same artifact set.
+**Resolution:** Cap parallel agents at 3–5. Beyond this threshold, convergence conflicts overwhelm the integration step, negating speed gains.
+
+## Owned surface and non-goals
+
+**This skill owns:**
+- Multi-agent orchestration — decomposing objectives into agent task DAGs
+- Prompt engineering — writing execution-ready instructions for agents
+- Orchestration pattern selection — sequential, parallel, hierarchical, blackboard
+- Conflict resolution between parallel agents — workspace isolation, convergence, dialectical negotiation
+- Interleaved verification — execute-verify-proceed cycles between pipeline stages
+- Specification-first pipeline design — the canonical 10-step coordination sequence
+
+**Non-goals:**
+- Domain-specific process knowledge (lifecycle phases, industry standards, specialized procedures — those belong to domain skills)
+- Agent profile or skill definition authoring (those have dedicated skills)
+- Direct execution of domain work — this skill coordinates; domain skills provide the content
+
+When composed with domain skills, this skill provides the coordination framework — the domain skill provides the content requirements for each task.
 
 ## Prompt architecture
 
 Use these blocks in order when writing any agent prompt. Omit only when truly irrelevant.
 
-1. **Objective** — What must be achieved, in one sentence. Required end state, not implementation trivia.
-2. **Context and resources** — Exact files, paths, docs, URLs, commits, logs, or APIs. Source-of-truth references and precedence if multiple sources conflict.
-3. **Scope boundaries** — In-scope surfaces and explicit non-goals. Coupled areas to check (tests, docs, CI, UX, migrations, contracts).
-4. **Constraints** — Security, compatibility, performance, tooling, model, environment, or policy limits. Forbidden actions (destructive commands, rule bypasses, shortcut fixes).
-5. **Execution expectations** — Required approach (explore first, then implement; prefer existing patterns; use relevant skills), branch/commit strategy, delegation requirements for subagents.
-6. **Validation and definition of done** — Which checks must pass (lint/build/tests/CI). Required end-to-end validations. Completion rule.
-7. **Deliverables** — Exact expected outputs (files, diffs, report structure, commands). Required response style (summary, evidence, next steps).
+1. **Objective** — What must be achieved, in one sentence. Required end state, not process trivia.
+2. **Context and resources** — Exact files, paths, docs, URLs, data sources, or references. Source-of-truth references and precedence if multiple sources conflict.
+3. **Scope boundaries** — In-scope surfaces and explicit non-goals. Coupled areas to check for downstream effects.
+4. **Constraints** — Security, compatibility, performance, resource, policy, or tooling limits. Forbidden actions.
+5. **Execution expectations** — Required approach (explore first, then act; prefer existing patterns; use relevant domain skills), delegation requirements for subagents.
+6. **Validation and definition of done** — Which checks must pass. Required end-to-end validations. Completion rule.
+7. **Deliverables** — Exact expected outputs (artifacts, reports, diffs, summaries). Required response style (summary, evidence, next steps).
 
 ## Prompt quality rules
 
 - Prefer concrete nouns over vague language
-- Replace "improve/fix/refactor" with measurable targets
+- Replace "improve/fix/restructure" with measurable targets
 - Specify order when order matters
 - State tradeoff priorities when they conflict (correctness > speed)
-- Demand evidence for claims ("include command output path/check result")
+- Demand evidence for claims ("include the check result or source reference")
 - Include fallback behavior for blockers (try alternatives, then return exact blocker + evidence)
 - When dispatching agents, specify which domain skills to load for the task context
-- Execute large file write operations in bounded batches (200–300 lines per operation) to prevent tool-call timeouts
 
 ## Orchestration architecture
 
@@ -101,11 +119,11 @@ Use these blocks in order when writing any agent prompt. Omit only when truly ir
 
 Decouple the stateless planning layer (Brain) from the stateful execution layer (Heart). Fusing these into a single entity creates systemic fragility — execution failures crash the strategic plan.
 
-**Brain (Planner):** Evaluates the objective, loads system context, decomposes the request into a structured task DAG. Stateless per request. Provides execution strategy hints (parallel vs sequential) based on the dependency graph. Does not write code, run tests, or debug.
+**Brain (Planner):** Evaluates the objective, discovers available agents and domain skills, loads system context, and decomposes the request into a structured task DAG. Stateless per request. Provides execution strategy hints (parallel vs sequential) based on the dependency graph. Does not perform domain work.
 
 **Heart (Executor):** Receives the task DAG, tracks dynamic execution state, manages retry logic, enforces timeouts, aggregates results. Stateful per execution. Houses the execution strategy engine that dictates operational flow based on the Brain's plan.
 
-Independent scaling and isolated failure domains: a sub-agent hallucination managed by the Heart does not corrupt the Brain's strategic plan, allowing recovery without losing trajectory.
+Independent scaling and isolated failure domains: a sub-agent error managed by the Heart does not corrupt the Brain's strategic plan, allowing recovery without losing trajectory.
 
 ### Orchestration execution patterns
 
@@ -114,7 +132,7 @@ Select the pattern based on the task graph topology:
 | Pattern | Mechanism | Use when | Hazards |
 |---------|-----------|----------|---------|
 | Sequential Pipeline | Linear chain — each agent processes validated output of the preceding agent | Clear stage dependencies with ordered refinement | Early failures propagate unchecked; maximum latency |
-| Parallel Execution | Multiple agents work simultaneously on independent subtasks, converging at an aggregator | Independent domain tasks with no shared file paths | Resource-intensive; merge conflicts if boundaries not isolated |
+| Parallel Execution | Multiple agents work simultaneously on independent subtasks, converging at an aggregator | Independent tasks with no shared artifact paths | Resource-intensive; conflicts if boundaries not isolated |
 | Hierarchical Routing | Coordinator delegates dynamically based on intermediate results | Complex unpredictable tasks requiring real-time capability assessment | Infinite delegation loops; non-deterministic execution path |
 | Blackboard | Shared knowledge repository — agents read/write asynchronously | Cross-domain synthesis, complex conflict resolution | Context overflow from unstructured accumulation |
 
@@ -125,7 +143,7 @@ The dependency graph determines the pattern — never parallelize tasks with seq
 Decompose complex objectives into atomic work units. Every subtask must satisfy four properties:
 
 1. **Atomic** — Cannot be meaningfully subdivided without losing critical context
-2. **Independently verifiable** — Success checked via automated tests, linting, or exit codes — no subjective self-evaluation
+2. **Independently verifiable** — Success checked via automated checks, defined criteria, or deterministic evaluation — no subjective self-evaluation
 3. **Independent** — Minimal overlapping dependencies with concurrent subtasks — no race conditions
 4. **Bounded** — Clear scope parameters and explicit completion criteria signaling the executor to terminate
 
@@ -137,28 +155,28 @@ Output decomposition as structured JSON. This schema is the universal interface 
 |-------|------|---------|
 | `task_id` | string | Unique identifier for DAG tracking |
 | `description` | string | Precise, measurable objective — vague verbs ("improve," "optimize") prohibited |
-| `assignee_role` | string | Agent archetype required (explorer, architect, implementer, verifier) |
+| `assignee_role` | string | Agent archetype required (explorer, planner, executor, verifier) |
 | `dependencies` | array | Preceding task_ids that must reach COMPLETED before dispatch |
-| `context_paths` | array | File paths, URLs, or doc boundaries the agent may ingest |
+| `context_paths` | array | File paths, URLs, or reference boundaries the agent may ingest |
 | `execution_strategy` | string | parallel, sequential, or background |
-| `definition_of_done` | string | Exact test command, exit code, or verification metric |
+| `definition_of_done` | string | Exact verification check, acceptance metric, or completion evidence |
 | `skills` | array | Domain skills the agent should load for task context |
 
 Forcing the planner to articulate the definition of done before dispatch prevents the test-free-done anti-pattern at the architectural level.
 
 ## Conflict resolution
 
-### Git worktree isolation
+### Workspace isolation
 
-For parallel execution, assign each sub-agent its own Git worktree with an independent branch and working directory. Unlike standard branching, worktrees allow concurrent edits across branches without file-locking conflicts.
+For parallel execution, assign each sub-agent its own isolated workspace with independent state. Isolation allows concurrent work without resource-locking conflicts.
 
-**Process:** Dispatch → agents edit in isolated directories → local verification passes → orchestrator merges branches at a single integration point → resolve conflicts deterministically at merge time.
+**Process:** Dispatch → agents work in isolated environments → local verification passes → orchestrator converges results at a single integration point → resolve conflicts deterministically at convergence time.
 
-**Scaling limit:** 3–5 concurrent implementation agents. Beyond this, merge conflict volume overwhelms clean integration.
+**Scaling limit:** 3–5 concurrent agents. Beyond this, convergence conflict volume overwhelms clean integration.
 
 ### Sequential write discipline
 
-When Git worktree isolation is unavailable, agents writing to overlapping file sets must be dispatched sequentially. Parallel agents cannot coordinate and will overwrite each other's changes. The orchestrator must analyze `context_paths` for file-set overlap before choosing parallel vs sequential execution.
+When workspace isolation is unavailable, agents writing to overlapping artifact sets must be dispatched sequentially. Parallel agents cannot coordinate and will overwrite each other's changes. The orchestrator must analyze `context_paths` for artifact-set overlap before choosing parallel vs sequential execution.
 
 ### Dialectical negotiation for report synthesis
 
@@ -170,39 +188,39 @@ When parallel agents produce overlapping analysis, merge reports using thesis/an
 
 ## Interleaved verification
 
-Never dispatch an entire task queue without checking intermediate results. Operate on a cycle of implement → verify → proceed.
+Never dispatch an entire task queue without checking intermediate results. Operate on a cycle of execute → verify → proceed.
 
-1. Implementer completes atomic code differential
-2. Orchestrator pauses further implementation in that thread
+1. Executor completes atomic deliverable
+2. Orchestrator pauses further execution in that thread
 3. Verifier agent inspects the isolated artifact (deterministic checks first)
-4. IF rejected: defect report routed back to original Implementer for localized fix loop
-5. Loop until Verifier approves
+4. IF rejected: defect report routed back to original executor for localized fix loop
+5. Loop until verifier approves
 6. Orchestrator unlocks next phase
 
-Only after all sequential tasks pass localized verification gates does the orchestrator dispatch a full-system Reviewer or Synthesizer for integrated evaluation against the original objective.
+Only after all sequential tasks pass localized verification gates does the orchestrator dispatch a full-system reviewer or synthesizer for integrated evaluation against the original objective.
 
-**Economics:** Verification requires less computation than generation. Use smaller, optimized models for Verifier agents to reduce cost and latency while maintaining rigor.
+**Economics:** Verification requires less computation than generation. Use smaller, optimized models for verifier agents to reduce cost and latency while maintaining rigor.
 
-**CI as final gate:** After all tasks pass local verification and full-system review, the CI pipeline serves as the ultimate deterministic gate. The pipeline is not complete until CI is green.
+**Final deterministic gate:** After all tasks pass local verification and full-system review, a deterministic verification gate serves as the ultimate pass/fail check. The pipeline is not complete until this gate passes.
 
-**Comprehensive scope:** Verifiers should check the full affected surface — not just the files listed in `context_paths` — to catch regressions in coupled code.
+**Comprehensive scope:** Verifiers should check the full affected surface — not just the artifacts listed in `context_paths` — to catch regressions in coupled areas.
 
-## Spec-driven development pipeline
+## Specification-first orchestration pipeline
 
-The canonical orchestration sequence for modification tasks. Define the desired outcome before writing any code:
+The canonical orchestration sequence for complex tasks. Define the desired outcome before any execution begins:
 
-1. **Map** — Dispatch explorer agents to build code maps and conceptual models of affected system areas
-2. **Specify** — Define the desired end state, behavioral rules, and acceptance criteria as a specification. No code yet
-3. **Architect** — Project the specification onto the code map. Produce a Technical Architecture Plan with file-level changes and interface contracts
-4. **Test** — Draft test definitions (E2E, integration) based on the specification and architecture plan before implementation begins (pipeline-level TDD)
-5. **Decompose** — Break the architecture plan into atomic agent tasks with a dependency graph and task queue
-6. **Implement** — Dispatch implementers sequentially or in isolated worktrees. Each writes unit tests first, then code (task-level TDD)
-7. **Verify** — After each implementation step, dispatch a verifier. Loop fix cycles locally until approved
+1. **Discover** — Dispatch explorer agents to map the current state and build knowledge models of affected areas
+2. **Specify** — Define the desired end state, behavioral rules, and acceptance criteria as a specification. No execution yet
+3. **Plan** — Project the specification onto the current-state model. Produce a structured plan with artifact-level changes and interface contracts
+4. **Define verification** — Draft verification criteria based on the specification and plan before execution begins (pipeline-level test-first design)
+5. **Decompose** — Break the plan into atomic agent tasks with a dependency graph and task queue
+6. **Execute** — Dispatch executors sequentially or in isolated workspaces. Each produces verification evidence alongside deliverables
+7. **Verify** — After each execution step, dispatch a verifier. Loop fix cycles locally until approved
 8. **Review** — After all tasks pass verification, dispatch a reviewer for full-system evaluation against the original objective and specification
-9. **Gate** — CI pipeline must pass as the final deterministic gate. Not done until CI is green
-10. **Clean up** — Remove temporary planning, audit, and intermediate files before reporting completion
+9. **Gate** — Final deterministic check must pass. Not done until the gate is green
+10. **Clean up** — Remove scratch files, working notes, and intermediate planning artifacts that are not part of the declared deliverables before reporting completion
 
-Steps 6–7 repeat per task. Steps 8–9 gate the entire pipeline. If the review or CI gate fails, route failures back to the appropriate step.
+Steps 6–7 repeat per task. Steps 8–9 gate the entire pipeline. If the review or gate fails, route failures back to the appropriate step.
 
 ## Subagent delegation template
 
@@ -212,7 +230,7 @@ Use this when dispatching work to a subagent:
 Task: <single responsibility objective>
 Context: <relevant paths/files/specs only>
 Constraints: <hard limits and forbidden actions>
-Expected output: <exact files/edits/report fields>
+Expected output: <exact artifacts/edits/report fields>
 Validation: <checks to run and evidence to return>
 Done when: <objective completion criteria>
 ```
@@ -227,20 +245,20 @@ Mirrors the architecture blocks. Fill each placeholder; omit only when truly irr
 
 ```
 Objective: <single-sentence required end state>
-Context: <paths, docs, logs, refs>
+Context: <paths, docs, data, refs>
 Scope: In scope: <surfaces> | Out of scope: <surfaces> | Also validate: <adjacent>
 Constraints: <hard limits> | Forbidden: <actions>
 Execution: <approach, skills, delegation>
-Validation / Done: <checks, CI, E2E, stabilization>
-Deliverables: <files, commits, reports, format>
+Validation / Done: <checks, acceptance criteria, stabilization>
+Deliverables: <artifacts, reports, format>
 ```
 
-## Prompt lint checklist
+## Prompt quality checklist
 
 Verify each block from § Prompt architecture is present, then check:
 
 - Could an agent act on this prompt without guessing?
-- Does the prompt avoid repo-specific assumptions unless provided?
+- Does the prompt avoid context-specific assumptions unless provided?
 - Are security and data-safety requirements stated where relevant?
 - Could another agent continue from the output without rediscovery?
 
@@ -248,54 +266,56 @@ Verify each block from § Prompt architecture is present, then check:
 
 - Is the DAG acyclic with no circular dependencies?
 - Does every task have a definition of done with verifiable criteria?
-- Are parallel tasks truly independent (no shared file paths)?
+- Are parallel tasks truly independent (no shared artifact paths)?
 - Is interleaved verification enforced between sequential stages?
-- Is the CI pipeline defined as the final deterministic gate?
+- Is a final deterministic gate defined as the last pass/fail check?
 - Are agents instructed to load relevant domain skills for their task context?
-- For agents without worktree isolation: are overlapping file-set writes dispatched sequentially?
-- Has the specification been defined before implementation begins?
-- Were test definitions drafted before implementation dispatch (pipeline-level TDD)?
-- Are parallel agents isolated via worktrees or separate directories?
+- For agents without workspace isolation: are overlapping artifact writes dispatched sequentially?
+- Has the specification been defined before execution begins?
+- Were verification criteria drafted before execution dispatch?
+- Are parallel agents isolated via separate workspaces or directories?
 - Is the max parallel agent count ≤ 5?
 - Are escalation conditions defined for ambiguous or contradictory goals?
 
 ## Examples
 
-### Pair 1 — Feature implementation prompt
+### Pair 1 — Supply chain optimization prompt
 
 **BAD:**
 ```
-Fix the search feature. It's slow and doesn't work well.
-Users are complaining. Make it better and add tests.
+Analyze the supply chain data. It's messy and needs to be better.
+Find bottlenecks and make recommendations.
 ```
-Problems: Wish Prompt ("make it better"), Implicit Scope (which search feature? what files?), Test-Free Done (no success criteria), missing context (no paths, no current behavior, no perf numbers).
+Problems: Wish Prompt ("needs to be better"), Implicit Scope (which data? what facilities?), Test-Free Done (no success criteria), missing context (no data sources, no deliverable format).
 
 **GOOD:**
 ```
-Objective: Reduce P95 latency of GET /api/search from 1200ms to under 300ms.
+Objective: Identify the top 3 logistics bottlenecks causing delivery delays
+exceeding 48 hours in the Southeast distribution network.
 
-Context: Search handler in src/api/search.ts queries Postgres via
-src/db/queries.ts#searchProducts. Current EXPLAIN output in
-docs/search-explain.md shows sequential scan on `products`.
+Context: Shipment logs in data/shipments-q3.csv (origin, destination, timestamps).
+Facility capacity data in docs/warehouse-specs.md. Carrier SLA documents in
+docs/carrier-contracts/.
 
 Scope:
-  In scope: src/api/search.ts, src/db/queries.ts, related test files.
-  Out of scope: UI changes, other API endpoints, schema migrations.
+  In scope: Southeast region facilities (ATL, MIA, CLT), carrier performance metrics.
+  Out of scope: Pricing renegotiation, fleet procurement, Western region facilities.
 
-Constraints: Must use existing Postgres indexes or add new ones via migration.
-No external search engines.
+Constraints: Use only the provided data sources. Do not extrapolate beyond Q3 data.
+All delay calculations must use actual vs SLA timestamps.
 
-Validation: `npm test -- --grep search` passes. `k6 run tests/perf/search.js`
-reports P95 < 300ms.
+Validation: Every identified bottleneck cites specific shipment IDs and timestamps.
+Delay distribution histogram covers all Southeast facilities.
 
-Done when: Tests green, perf target met, migration file included.
+Done when: Report contains bottleneck ranking table with root cause per facility,
+delay distribution analysis, and 3 prioritized mitigation recommendations with evidence.
 ```
 
-### Pair 2 — Task decomposition
+### Pair 2 — Task decomposition for curriculum restructuring
 
 **BAD:**
 ```json
-{ "task": "Refactor the authentication system", "agent": "coder" }
+{ "task": "Redesign the engineering curriculum", "agent": "planner" }
 ```
 Problems: Not atomic, no dependencies, no verifiable done, vague assignee.
 
@@ -303,76 +323,79 @@ Problems: Not atomic, no dependencies, no verifiable done, vague assignee.
 ```json
 [
   {
-    "task_id": "map-auth-flow",
-    "description": "Map JWT auth flow from login through token refresh in src/auth/",
+    "task_id": "audit-current-curriculum",
+    "description": "Map all 42 courses in the current engineering curriculum to learning outcomes, prerequisites, and credit hours",
     "assignee_role": "explorer",
     "dependencies": [],
-    "context_paths": ["src/auth/"],
+    "context_paths": ["docs/course-catalog.md", "data/enrollment-history.csv"],
     "skills": [],
     "execution_strategy": "sequential",
-    "definition_of_done": "Code map covers login, token issue, refresh, and logout paths"
+    "definition_of_done": "Curriculum map table with all 42 courses showing outcomes, prerequisites, credit hours, and 3-year enrollment trends"
   },
   {
-    "task_id": "design-auth-refactor",
-    "description": "Design stateless JWT architecture replacing session-based auth",
-    "assignee_role": "architect",
-    "dependencies": ["map-auth-flow"],
-    "context_paths": ["src/auth/", "docs/auth-requirements.md"],
-    "skills": ["auth-patterns"],
+    "task_id": "identify-gaps",
+    "description": "Compare current curriculum against accreditation body requirements and industry advisory board recommendations to identify coverage gaps",
+    "assignee_role": "planner",
+    "dependencies": ["audit-current-curriculum"],
+    "context_paths": ["docs/accreditation-standards.md", "docs/advisory-board-report.md"],
+    "skills": ["education-standards"],
     "execution_strategy": "sequential",
-    "definition_of_done": "Architecture plan with file-level change list and interface definitions"
+    "definition_of_done": "Gap analysis matrix mapping each accreditation requirement to current course coverage with gap/overlap classification"
   },
   {
-    "task_id": "implement-token-service",
-    "description": "Implement TokenService class in src/auth/token-service.ts per architecture plan",
-    "assignee_role": "implementer",
-    "dependencies": ["design-auth-refactor"],
-    "context_paths": ["src/auth/token-service.ts", "src/auth/types.ts"],
-    "skills": ["auth-patterns"],
+    "task_id": "draft-revised-sequence",
+    "description": "Propose revised 4-year course sequence resolving identified gaps while maintaining prerequisite chains and credit hour constraints",
+    "assignee_role": "executor",
+    "dependencies": ["identify-gaps"],
+    "context_paths": ["docs/credit-hour-policy.md", "docs/faculty-capacity.md"],
+    "skills": ["curriculum-design"],
     "execution_strategy": "parallel",
-    "definition_of_done": "npm test -- --grep TokenService passes with >90% branch coverage"
+    "definition_of_done": "Revised sequence covers 100% of accreditation requirements, all prerequisite chains valid, total credits within 120–128 range"
   }
 ]
 ```
 
-### Pair 3 — Subagent delegation
+### Pair 3 — Subagent delegation for document review
 
 **BAD:**
 ```
-Review the PR and fix any issues. Make sure it follows best practices.
+Review the report and fix any issues. Make sure it follows best practices.
 ```
-Problems: Wish Prompt ("fix any issues," "best practices"), Implicit Scope (entire PR? which docs?), Missing Escape Hatch (what if conflicts exist?), consultant-speak.
+Problems: Wish Prompt ("fix any issues," "best practices"), Implicit Scope (entire report? which sections?), Missing Escape Hatch (what if conflicting requirements?), consultant-speak.
 
 **GOOD:**
 ```
-Task: Address all 4 review comments on PR #342 so the PR passes CI and is merge-ready.
-Context: Review comments on src/auth/session.ts (token expiry logic) and
-  src/auth/session.test.ts (missing edge case). Read via `gh pr view 342 --comments`.
-Constraints: Do not change the public API signature of refreshToken().
-Expected output: One commit per resolved comment in src/auth/session.ts and test file.
-Validation: `npm test` passes. `npm run lint` passes. No unresolved review threads.
-Done when: All 4 comments resolved, CI green, commit history clean.
+Task: Resolve all 4 reviewer comments on the Q3 financial report so the report
+passes editorial review and is ready for board distribution.
+Context: Reviewer comments in docs/q3-report-feedback.md targeting sections 3.2
+  (revenue projections) and 4.1 (risk assessment). Source data in data/q3-actuals.csv.
+Constraints: Do not change the executive summary without CFO approval.
+  All figures must trace to q3-actuals.csv.
+Expected output: Updated report with tracked changes. Summary of each resolved comment.
+Validation: All 4 comments addressed. Every figure in sections 3.2 and 4.1 has
+  a source reference to q3-actuals.csv. No unresolved reviewer threads.
+Done when: All comments resolved, editorial checklist passes, tracked changes visible.
 ```
 
 ## Questions this skill answers
 
-- How do I write a good prompt for a coding agent?
-- How should I structure instructions for an AI coding assistant?
+- How do I write a good prompt for an agent?
+- How should I structure instructions for an AI assistant?
 - What makes an agent prompt execution-ready vs vague?
 - How do I delegate a subtask to a subagent?
 - How do I rewrite a weak or vague prompt into a strong one?
 - What should I include in acceptance criteria for an agent task?
-- How do I scope a prompt so the agent doesn't touch unrelated code?
+- How do I scope a prompt so the agent doesn't touch unrelated areas?
 - What are common mistakes in agent prompts?
-- How do I write a prompt for a bug fix / refactor / feature / audit?
-- Help me phrase this task for Copilot / an AI agent
+- How do I write a prompt for an analysis / review / planning / audit task?
+- How do I phrase this task for an AI agent?
 - How do I design a multi-agent workflow?
 - How do I break down a complex task for multiple agents?
 - What orchestration pattern should I use?
 - How do I prevent agents from conflicting with each other?
 - How do I set up verification loops between agents?
 - How do I coordinate parallel agent execution?
-- How do I handle merge conflicts between parallel agents?
-- What is spec-driven development for agent pipelines?
-- How should I sequence exploration, specification, and implementation?
-- Should I write tests before dispatching implementation agents?
+- How do I handle conflicts between parallel agents?
+- What is specification-first design for agent pipelines?
+- How should I sequence discovery, specification, and execution?
+- Should I define verification criteria before dispatching agents?
