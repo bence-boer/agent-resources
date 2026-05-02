@@ -1,198 +1,227 @@
 ---
 name: shadcn-svelte
-description: >
-  Component library reference for shadcn-svelte (Svelte 5 + Tailwind CSS v4) covering bits-ui
-  primitives, Formsnap/Superforms integration, CSS variable theming, component variants with
-  tailwind-variants, and data-slot architecture. Use when adding, configuring, customizing, or
-  composing shadcn-svelte UI components in a Svelte or SvelteKit project. Triggers on any mention
-  of shadcn, shadcn-svelte, or when working with components from this library (Button, Dialog,
-  Sidebar, Form, Card, Table, etc.), theming with CSS variables or OKLCH tokens, the shadcn-svelte
-  CLI, components.json configuration, or cn() class merging. Also use when building forms with
-  Formsnap/Superforms, setting up dark mode, or customizing design system tokens.
-  Do NOT use for general Svelte/SvelteKit application architecture (use the architecture skill),
-  non-shadcn component libraries, or vanilla Tailwind without shadcn components.
+description: Manages shadcn-svelte components and projects — adding, updating, fixing, debugging, styling, and composing UI. Provides project context, component docs, and usage examples. Applies when working with shadcn-svelte, the CLI, design-system presets, or any project with a components.json file. Also triggers for "shadcn-svelte init", "add component", or registry URLs.
+user-invocable: false
+allowed-tools: Bash(npx shadcn-svelte@latest *), Bash(pnpm dlx shadcn-svelte@latest *), Bash(bunx --bun shadcn-svelte@latest *)
 ---
 
 # shadcn-svelte
 
-Composable, themeable UI components for Svelte 5 built on Bits UI and Tailwind CSS v4. Not a traditional component library — components are copied into your project as open, editable source code.
+A framework for building UI, components, and design systems for Svelte. Components are added as source to the user's project via the CLI.
 
-## Expert vocabulary
+> **IMPORTANT:** Run all CLI commands using the project's package runner: `npx shadcn-svelte@latest`, `pnpm dlx shadcn-svelte@latest`, or `bunx --bun shadcn-svelte@latest` — based on the project's package manager. Examples below use `npx shadcn-svelte@latest` but substitute the correct runner for the project.
 
-**Component system:** data-slot attributes, class prop merging, `ClassValue` type (from `svelte/elements`, v5.19+ — accepts `string | Record<string, boolean> | ClassValue[] | null | undefined`), `cn()` utility (clsx + tailwind-merge), `tv()` component variants (tailwind-variants), `VariantProps`, compound component barrel exports, namespace imports
+## Current Project Context
 
-**Styling:** CSS custom properties, HSL/OKLCH design tokens, Tailwind CSS v4, `@theme` directive, `--color-*` variables, `.dark` class strategy, `color-scheme`, base colors (zinc, slate, stone, neutral, gray)
+Read `components.json` at the project root and, when you need the live file layout, list the directory given by the `aliases.ui` path (resolved with the same rules as the CLI).
 
-**Foundation:** bits-ui headless primitives, Formsnap form bindings, Superforms (SvelteKit form library), Zod schema validation, Melt UI (predecessor library), `@lucide/svelte` icons
+## Imports (Svelte)
 
-**Configuration:** `components.json`, `shadcn-svelte` CLI (`add`, `init`, `diff`), `$lib/components/ui/` component paths, `$lib/utils.js` utility module, alias resolution
+Each component lives in its own folder with an `index.ts` barrel. Match the [installation docs](https://shadcn-svelte.com/docs/installation):
 
-## Key facts
-
-- Components live in `$lib/components/ui/<component>/` as editable `.svelte` files
-- All components use Svelte 5 patterns: `$props()`, snippets (not slots), callback props (not events)
-- Styling uses Tailwind CSS v4 with CSS variable design tokens and `tailwind-variants` (`tv()`)
-- Headless behavior comes from `bits-ui`; components are styled wrappers
-- Icons come from `@lucide/svelte`
-- The `cn()` utility (clsx + tailwind-merge) handles class composition
-- CLI: `npx shadcn-svelte@latest add <component>` to scaffold components
-- Config: `components.json` at project root controls paths, aliases, and base color
-
-## Reference routing
-
-Read only the reference that matches the task.
-
-| Task | Read |
-| --- | --- |
-| Adding a component, looking up usage/API/examples | [component-index](references/component-index.md) then the specific component file it routes to |
-| Project setup, CLI commands, components.json, dark mode | [setup](references/setup.md) |
-| CSS variables, design tokens, custom colors, base colors | [theming](references/theming.md) |
-| Building forms with Formsnap/Superforms/Zod, or using Field | [forms](references/forms.md) |
-
-## Common mistakes
-
-### 1. Using Svelte 4 component patterns
-**Detection:** Props declared with `export let` instead of `$props()`. Slots used instead of snippets. Event dispatching instead of callback props.
-**Resolution:** shadcn-svelte v5 requires Svelte 5 runes. Destructure props with `let { prop, ...rest } = $props()`, replace `<slot />` with `{@render children?.()}`, and pass callbacks like `onclick` as props.
-
-### 2. Importing directly from bits-ui
-**Detection:** Import paths like `import { Dialog } from "bits-ui"` in application code instead of the local shadcn-svelte wrappers.
-**Resolution:** Always import from `$lib/components/ui/<component>/index.js`. The shadcn-svelte wrappers apply the project's design tokens, variants, and class composition. Use bits-ui directly only when building a new primitive that shadcn-svelte does not provide.
-
-### 3. Using @apply in Tailwind v4
-**Detection:** `@apply` directives in component styles or global CSS when Tailwind v4 is in use.
-**Resolution:** Prefer inline utility classes or CSS custom properties from the design system. In Tailwind v4, `@apply` is discouraged — use `@theme` for token definitions and utility classes for component styling.
-
-### 4. Hardcoding color values
-**Detection:** Literal hex/RGB/HSL values like `bg-[#1a1a2e]` or `color: hsl(220, 50%, 20%)` instead of design system tokens.
-**Resolution:** Use the CSS variable tokens: `bg-primary`, `text-muted-foreground`, `border-input`, etc. These resolve to the active theme and respect dark mode. Define new tokens in the `@theme` block if the palette needs extending.
-
-### 5. Overriding component internals
-**Detection:** Directly editing scaffolded component source files to change behavior, or reaching into internal DOM structure.
-**Resolution:** Extend through composition and the `class` prop. Wrap components, pass `class={cn(baseStyles, className)}`, or create new variants in `tv()`. Edit source only when the component genuinely needs a structural change, not for one-off styling.
-
-### 6. Using `export * as` in component barrel files
-**Detection:** Barrel file uses `export * as Root from "./dialog.svelte"` instead of `export { default as Root } from "./dialog.svelte"`. TypeScript reports `ConstructorOfATypedSvelteComponent` mismatches; components cannot be used as `<Component.Root>`.
-**Resolution:** Always use `export { default as X }` to re-export the component's default export. `export * as X` exports the entire module namespace object, not the Svelte component — it is syntactically close but semantically wrong.
-
-### 7. Inline styles for data-attribute state
-**Detection:** Component uses a `<style>` block with selectors like `[data-state="active"]` for state-based styling instead of utility classes.
-**Resolution:** Use Tailwind's data-attribute variants: `data-[state=active]:bg-primary data-[state=active]:text-primary-foreground`. Inline style blocks break class-prop overrides via `cn()`, create specificity conflicts, and split the styling source of truth.
-
-## Component conventions
-
-### Import pattern
-
-All components use namespace imports from their `index.js` barrel:
-
-```svelte
-<script lang="ts">
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-</script>
-
-<Dialog.Root>
-  <Dialog.Trigger>Open</Dialog.Trigger>
-  <Dialog.Content>
-    <Dialog.Header>
-      <Dialog.Title>Title</Dialog.Title>
-      <Dialog.Description>Description</Dialog.Description>
-    </Dialog.Header>
-  </Dialog.Content>
-</Dialog.Root>
-```
-
-For leaf components without sub-parts, use named imports:
-
-```svelte
-<script lang="ts">
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-</script>
-```
-
-### Variant pattern
-
-Components use `tailwind-variants` (`tv()`) for variant definitions:
-
-```svelte
-<script lang="ts" module>
-  import { tv, type VariantProps } from "tailwind-variants";
-
-  export const buttonVariants = tv({
-    base: "inline-flex items-center justify-center ...",
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground ...",
-        destructive: "bg-destructive text-destructive-foreground ...",
-        outline: "border border-input bg-background ...",
-        secondary: "bg-secondary text-secondary-foreground ...",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "size-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  });
-
-  export type ButtonVariant = VariantProps<typeof buttonVariants>;
-</script>
-```
-
-### Class composition
-
-Always merge user classes with `cn()`:
-
-```svelte
-<script lang="ts">
-  import { cn } from "$lib/utils.js";
-  let { class: className, variant, size, ...restProps } = $props();
-</script>
-
-<button class={cn(buttonVariants({ variant, size }), className)} {...restProps}>
-  {@render children?.()}
-</button>
-```
-
-**`cn()` limitation:** tailwind-merge resolves conflicts within the same class group (e.g., `bg-red-500` overrides `bg-blue-500`), but classes from different groups always coexist. `font-bold` (weight) and `font-sans` (family) are separate groups — a component that sets font-family through `cn()` cannot have it overridden via the `class` prop.
-
-### Component anatomy pattern
-
-Compound components export sub-parts from a barrel file:
+- **Multi-part components** (dialog, select, card, field, tabs, …): `import * as Dialog from "$lib/components/ui/dialog"` then `Dialog.Content`, `Dialog.Title`, `Card.Root`, `Card.Header`, etc. — whatever the barrel exports (short names and/or `Root as …` aliases).
+- **Single-component barrels** (only one meaningful component in the folder): **named imports** — `import { Button } from "$lib/components/ui/button"` and `<Button>`, not `import * as Button` + `Button.Root`. Same pattern for `{ Input }`, `{ Badge }`, `{ Spinner }`, `{ Checkbox }`, `{ Separator }`, `{ Skeleton }`, etc.
 
 ```ts
-// $lib/components/ui/dialog/index.ts
-export { default as Root } from "./dialog.svelte";
-export { default as Trigger } from "./dialog-trigger.svelte";
-export { default as Content } from "./dialog-content.svelte";
-export { default as Header } from "./dialog-header.svelte";
-export { default as Footer } from "./dialog-footer.svelte";
-export { default as Title } from "./dialog-title.svelte";
-export { default as Description } from "./dialog-description.svelte";
+import * as Dialog from "$lib/components/ui/dialog";
+import { Button } from "$lib/components/ui/button";
+import { Separator } from "$lib/components/ui/separator";
 ```
 
-For layout that adapts to which sub-parts are rendered, use CSS `:has()` with `data-slot` selectors on the parent. Example: `has-[[data-slot=page-hero-aside]]:grid-cols-[1fr_auto]` switches a hero to two-column layout when an Aside child is present. This is SSR-safe and requires no JavaScript or context.
+Use the real aliases from `components.json` (often `$lib/components/ui/...`), not hardcoded paths.
 
-## Notes on component docs
+## Principles
 
-The component reference files in `references/components/` were sourced from the shadcn-svelte documentation site. They may contain residual doc-site formatting artifacts (empty `## Installation` sections, `showLineNumbers` in code fences). Focus on the **Usage** and **Examples** sections for the actual component API and patterns.
+1. **Use existing components first.** Run `npx shadcn-svelte@latest add` with no arguments to browse available components, or check [Components](https://shadcn-svelte.com/docs/components) before writing custom UI.
+2. **Compose, don't reinvent.** Settings page = Tabs + Card + form controls. Dashboard = Sidebar + Card + Chart + Table.
+3. **Use built-in variants before custom styles.** `variant="outline"`, `size="sm"`, etc.
+4. **Use semantic colors.** `bg-primary`, `text-muted-foreground` — never raw values like `bg-blue-500`.
 
-## Questions this skill answers
+## Critical Rules
 
-- "Add a Dialog component"
-- "How do I use shadcn-svelte?"
-- "Set up the design system tokens"
-- "Build a form with Superforms"
-- "What components are available in shadcn-svelte?"
-- "Customize the theme colors"
-- "How do variants work?"
-- "Set up dark mode"
-- "Add a new shadcn component"
-- "How do I configure components.json?"
+These rules are **always enforced**. Each links to a file with Incorrect/Correct code pairs.
+
+### Styling & Tailwind → [styling.md](./rules/styling.md)
+
+- **`class` for layout, not styling.** Never override component colors or typography.
+- **No `space-x-*` or `space-y-*`.** Use `flex` with `gap-*`. For vertical stacks, `flex flex-col gap-*`.
+- **Use `size-*` when width and height are equal.** `size-10` not `w-10 h-10`.
+- **Use `truncate` shorthand.** Not `overflow-hidden text-ellipsis whitespace-nowrap`.
+- **No manual `dark:` color overrides.** Use semantic tokens (`bg-background`, `text-muted-foreground`).
+- **Use `cn()` for conditional classes.** Don't write manual template literal ternaries.
+- **No manual `z-index` on overlay components.** Dialog, Sheet, Popover, etc. handle their own stacking.
+
+### Forms & Inputs → [forms.md](./rules/forms.md)
+
+- **Forms use `Field.FieldGroup` + `Field.Field`.** Never use raw `div` with `space-y-*` or `grid gap-*` for form layout.
+- **`InputGroup` uses `InputGroup.Input`/`InputGroup.Textarea`.** Never raw `Input`/`Textarea` inside `InputGroup.Root`.
+- **Buttons inside inputs use `InputGroup.Root` + `InputGroup.Addon`.**
+- **Option sets (2–7 choices) use `ToggleGroup`.** Don't loop `Button` with manual active state.
+- **`Field.FieldSet` + `Field.FieldLegend` for grouping related checkboxes/radios.** Don't use a `div` with a heading.
+- **Field validation uses `data-invalid` + `aria-invalid`.** `data-invalid` on `Field`, `aria-invalid` on the control. For disabled: `data-disabled` on `Field`, `disabled` on the control.
+
+### Component Structure → [composition.md](./rules/composition.md)
+
+- **Items always inside their Group.** `Select.Item` → `Select.Group`. `DropdownMenu.Item` → `DropdownMenu.Group`. `Command.Item` → `Command.Group`.
+- **Custom triggers.** Wrap controls in `Dialog.Trigger` / `AlertDialog.Trigger`, or control open state with `bind:open` on the root — see component docs.
+- **Dialog, Sheet, and Drawer always need a Title.** `Dialog.Title`, `Sheet.Title`, `Drawer.Title` required for accessibility. Use `class="sr-only"` if visually hidden.
+- **Use full Card composition.** `Card.Header`/`Card.Title`/`Card.Description`/`Card.Content`/`Card.Footer`. Don't dump everything in `Card.Content`.
+- **Button has no `isPending`/`isLoading`.** Compose with `Spinner` inside `Button` + `disabled`; use `data-icon="inline-start"` / `inline-end` on `Spinner` for correct spacing (`import { Button }`, `import { Spinner }`).
+- **`Tabs.Trigger` must be inside `Tabs.List`.** Never render triggers directly in `Tabs`.
+- **`Avatar` always needs `Avatar.Fallback`.** For when the image fails to load.
+
+### Use Components, Not Custom Markup → [composition.md](./rules/composition.md)
+
+- **Use existing components before custom markup.** Check if a component exists before writing a styled `div`.
+- **Callouts use `Alert`.** Don't build custom styled divs.
+- **Empty states use `Empty`.** Don't build custom empty state markup.
+- **Toast via `svelte-sonner`.** Use `toast()` from `svelte-sonner` with the Sonner component from your UI folder.
+- **Use `Separator`** instead of `<hr>` or a `div` with border-only classes.
+- **Use `Skeleton`** for loading placeholders. No custom `animate-pulse` divs.
+- **Use `Badge`** instead of custom styled spans.
+
+### Icons → [icons.md](./rules/icons.md)
+
+- **Icons in `<Button>` use `data-icon`.** `data-icon="inline-start"` or `data-icon="inline-end"` on the icon.
+- **No sizing classes on icons inside components.** Components handle icon sizing via CSS. No `size-4` or `w-4 h-4`.
+- **Pass icons as components.** Import from the configured `iconLibrary` (e.g. `@lucide/svelte`), not string keys.
+
+### CLI
+
+- **Presets** — copy the encoded string from the design-system builder on [shadcn-svelte.com](https://shadcn-svelte.com) and pass it to `npx shadcn-svelte@latest init --preset <code>`.
+
+## Key Patterns
+
+These are the most common patterns that differentiate correct shadcn-svelte code. For edge cases, see the linked rule files above.
+
+```svelte
+<script lang="ts">
+  import * as Field from "$lib/components/ui/field";
+  import { Input } from "$lib/components/ui/input";
+  import { Button } from "$lib/components/ui/button";
+  import SearchIcon from "@lucide/svelte/icons/search";
+  import { Badge } from "$lib/components/ui/badge";
+  import * as Avatar from "$lib/components/ui/avatar";
+</script>
+
+<!-- Form layout: Field.FieldGroup + Field.Field, not div + Label. -->
+<Field.FieldGroup>
+  <Field.Field>
+    <Field.FieldLabel for="email">Email</Field.FieldLabel>
+    <Input id="email" />
+  </Field.Field>
+</Field.FieldGroup>
+
+<!-- Validation: data-invalid on Field, aria-invalid on the control. -->
+<Field.Field data-invalid>
+  <Field.FieldLabel for="email">Email</Field.FieldLabel>
+  <Input id="email" aria-invalid />
+  <Field.FieldDescription>Invalid email.</Field.FieldDescription>
+</Field.Field>
+
+<!-- Icons in buttons: data-icon, no sizing classes. -->
+<Button>
+  <SearchIcon data-icon="inline-start" />
+  Search
+</Button>
+
+<!-- Spacing: gap-*, not space-y-*. -->
+<div class="flex flex-col gap-4"></div>
+
+<!-- Equal dimensions: size-*, not w-* h-*. -->
+<Avatar.Root class="size-10">
+  <Avatar.Image src="/u.png" alt="User" />
+  <Avatar.Fallback>U</Avatar.Fallback>
+</Avatar.Root>
+
+<!-- Status colors: Badge variants or semantic tokens, not raw colors. -->
+<Badge variant="secondary">+20.1%</Badge>
+```
+
+## Component Selection
+
+| Need                       | Use                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| Button/action              | `Button` with appropriate variant (`import { Button }`)                                             |
+| Form inputs                | `Input`, `Select`, `Combobox`, `Switch`, `Checkbox`, `RadioGroup`, `Textarea`, `InputOTP`, `Slider` |
+| Toggle between 2–5 options | `ToggleGroup.Root` + `ToggleGroup.Item`                                                             |
+| Data display               | `Table`, `Card`, `Badge`, `Avatar`                                                                  |
+| Navigation                 | `Sidebar`, `NavigationMenu`, `Breadcrumb`, `Tabs`, `Pagination`                                     |
+| Overlays                   | `Dialog` (modal), `Sheet` (side panel), `Drawer` (bottom sheet), `AlertDialog` (confirmation)       |
+| Feedback                   | `svelte-sonner` (toast), `Alert`, `Progress`, `Skeleton`, `Spinner`                                 |
+| Command palette            | `Command` inside `Dialog`                                                                           |
+| Charts                     | `Chart` (LayerChart)                                                                                |
+| Layout                     | `Card`, `Separator`, `Resizable`, `ScrollArea`, `Accordion`, `Collapsible`                          |
+| Empty states               | `Empty`                                                                                             |
+| Menus                      | `DropdownMenu`, `ContextMenu`, `Menubar`                                                            |
+| Tooltips/info              | `Tooltip`, `HoverCard`, `Popover`                                                                   |
+
+## Key Fields
+
+Use `components.json` and the filesystem — not a separate `info` command:
+
+- **`aliases`** → use the actual alias prefix from config (e.g. `$lib/`), never hardcode unrelated projects.
+- **`tailwind.css`** → the global CSS file where theme variables live. Edit this file for theme tweaks; don't add a second globals file unless the user already uses one.
+- **`style`** → visual treatment (e.g. `nova`, `vega`, …) and registry style path.
+- **`iconLibrary`** → determines icon packages (`@lucide/svelte`, `@tabler/icons-svelte`, etc.). Never assume `@lucide/svelte`.
+- **`registry`** → where the CLI fetches components; default official registry at `shadcn-svelte.com`.
+- **`resolvedPaths`** (conceptual) → the CLI resolves `aliases` to absolute paths; list `aliases.ui` on disk to see installed components.
+
+See [cli.md](./cli.md) for commands and flags.
+
+## Component Docs, Examples, and Usage
+
+Open `https://shadcn-svelte.com/docs/components/<name>.md` for docs and examples. **When creating, fixing, debugging, or using a component, read the official page first** so you follow the documented APIs.
+
+## Workflow
+
+1. **Get project context** — read `components.json` and list the UI components directory when needed.
+2. **Check installed components first** — before running `add`, list files under the resolved `ui` path. Don't import components that haven't been added, and don't re-add ones already present unless updating.
+3. **Discover components** — `npx shadcn-svelte@latest add` with no arguments (interactive list), or the docs site.
+4. **Install or update** — `npx shadcn-svelte@latest add <name>` or a registry **URL**. To refresh existing files from the registry, use `npx shadcn-svelte@latest update` (see [cli.md](./cli.md)).
+5. **Fix imports in third-party / URL-added items** — After adding from a custom registry URL, check for hardcoded paths that don't match the project's `aliases`. Rewrite imports to use the project's `ui` / `lib` aliases from `components.json`.
+6. **Review added components** — After adding, **read the added files** and verify composition (groups, titles, validation attrs). Align icon imports with `iconLibrary`.
+7. **Remote registry items** — Adding by URL is explicit; if the user wants a component from an unknown source, confirm the registry URL or item before running `add`.
+
+## Updating Components
+
+Use the **`update`** command to pull the latest registry versions of components already in the project. Review changes with `git diff` after `update`.
+
+1. Commit or stash local work.
+2. Run `npx shadcn-svelte@latest update [component]` or `--all`.
+3. Resolve merge conflicts if you had customized files.
+4. **Never use `--overwrite` on `add` without the user's explicit approval** when it would destroy intentional edits.
+
+## Quick Reference
+
+```bash
+# Initialize shadcn-svelte in your project.
+npx shadcn-svelte@latest init
+
+# Initialize with a preset string from the docs site builder.
+npx shadcn-svelte@latest init --preset <code>
+
+# Add components (interactive when run with no names).
+npx shadcn-svelte@latest add
+npx shadcn-svelte@latest add button card dialog
+npx shadcn-svelte@latest add --all
+
+# Update components already installed.
+npx shadcn-svelte@latest update button
+npx shadcn-svelte@latest update --all --yes
+
+# Build a custom registry (registry authors).
+npx shadcn-svelte@latest registry build
+```
+
+**Registry:** default `https://shadcn-svelte.com/registry` — override in `components.json` if needed.  
+**Docs:** [shadcn-svelte.com](https://shadcn-svelte.com)
+
+## Detailed References
+
+- [rules/forms.md](./rules/forms.md) — Field.FieldGroup, Field.Field, InputGroup, ToggleGroup, Field.FieldSet, validation states
+- [rules/composition.md](./rules/composition.md) — Groups, overlays, Card, Tabs, Avatar, Alert, Empty, Toast, Separator, Skeleton, Badge, Button loading
+- [rules/icons.md](./rules/icons.md) — data-icon, icon sizing, passing icon components
+- [rules/styling.md](./rules/styling.md) — Semantic colors, variants, class, spacing, size, truncate, dark mode, cn(), z-index
+- [cli.md](./cli.md) — Commands, flags, registry
+- [customization.md](./customization.md) — Theming, CSS variables, extending components
