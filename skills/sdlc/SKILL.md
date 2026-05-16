@@ -24,13 +24,13 @@ Prescribe, assess, and coordinate software development lifecycle processes — f
 
 **Lifecycle Governance & Standards:** ISO/IEC 12207 (software lifecycle processes), V-Model (verification-left/validation-right), phase gate (Cooper), earned value management (EVM), Software Project Management Plan (SPMP)
 
-**Requirements & Traceability:** IEEE 830 Software Requirements Specification (SRS), Requirements Traceability Matrix (RTM), one-hundred-percent rule (WBS), Human-Centered Design (ISO 9241-210), functional vs non-functional requirements, acceptance criteria
+**Requirements & Traceability:** IEEE 830 Software Requirements Specification (SRS), Requirements Traceability Matrix (RTM), one-hundred-percent rule (WBS), Human-Centered Design (ISO 9241-210), functional vs non-functional requirements, acceptance criteria, current-state specification
 
-**Architecture & Security Design:** IEEE 1016 Software Design Description (SDD), OWASP ASVS Level 3, threat modeling (STRIDE/Shostack), Documented Security Decisions (DSDs), Security Requirements Driven Development (SRDD)
+**Architecture & Security Design:** IEEE 1016 Software Design Description (SDD), OWASP ASVS Level 3, threat modeling (STRIDE/Shostack), Documented Security Decisions (DSDs), Security Requirements Driven Development (SRDD), compatibility contract
 
-**Inspection & Quality Assurance:** Fagan Inspection (6 operations: planning/overview/preparation/inspection/rework/follow-up), IEEE 829 Test Plan, SAST/DAST, system verification vs system validation, Plan-Do-Check-Act (PDCA/Deming), User Acceptance Testing (UAT)
+**Inspection & Quality Assurance:** Fagan Inspection (6 operations: planning/overview/preparation/inspection/rework/follow-up), IEEE 829 Test Plan, SAST/DAST, system verification vs system validation, Plan-Do-Check-Act (PDCA/Deming), User Acceptance Testing (UAT), workflow coverage
 
-**Review & Release Governance:** IEEE 1028 (reviews and audits), Change Advisory Board (CAB/ITIL), Service Validation and Testing (SVT), Configuration Management Database (CMDB), deployment strategy (canary/blue-green/phased rollout), rollback plan, post-implementation review
+**Review & Release Governance:** IEEE 1028 (reviews and audits), Change Advisory Board (CAB/ITIL), Service Validation and Testing (SVT), Configuration Management Database (CMDB), deployment strategy (canary/blue-green/phased rollout), rollback plan, post-implementation review, orphaned artifact removal
 
 ## Anti-pattern watchlist
 
@@ -46,7 +46,7 @@ Prescribe, assess, and coordinate software development lifecycle processes — f
 
 ### 3. Change-Log Documentation
 **Detection:** Documentation files accumulate entries describing what changed, what was fixed, what was found, or what was attempted. "Previous state" or "original approach" sections exist. Outdated plans, resolved issues, superseded decisions, or already-addressed known problems remain in the documentation folder. Agents reading the docs receive a mixture of current and obsolete information with no reliable way to distinguish them.
-**Resolution:** Documentation must describe the current state of the system as if it were always true — not the history of changes or the sequence of problems encountered. The moment any artifact, plan, issue, or decision is superseded or resolved, update or remove it immediately. A docs folder containing outdated plans is an active liability: it misleads agents and reviewers with false information. Working notes and active plans belong in a designated working directory (e.g., `docs/plans`), which applies the same removal discipline — entries are removed as soon as the work is complete.
+**Resolution:** Documentation must describe the current state of the system as if it were always true — not the history of changes or the sequence of problems encountered. The moment any artifact, plan, issue, or decision is superseded or resolved, update or remove it immediately. A docs folder containing outdated plans is an active liability: it misleads agents and reviewers with false information. Apply the same discipline to stale files, tests, interfaces, examples, and comments: if they no longer describe or validate the current system, remove or rewrite them. Working notes and active plans belong in a designated working area, which applies the same removal discipline — entries are removed as soon as the work is complete.
 
 **Security and design failures**
 
@@ -58,27 +58,35 @@ Prescribe, assess, and coordinate software development lifecycle processes — f
 **Detection:** Construction begins directly from requirements without a design document. Data models, API contracts, and module boundaries emerge organically during implementation. Architectural decisions are made implicitly by whoever writes first.
 **Resolution:** Complete the Software Design Description before writing production artifacts. Every architectural decision must be explicit, documented, and ratified. An unwritten architecture is not "agile" — it is an architecture decided by accident.
 
+### 6. Compatibility Assumption
+**Detection:** Backward compatibility is preserved or discarded by habit rather than by stated requirement. Teams add adapters, migrations, dual paths, or legacy shims without identifying external consumers, release status, contract stability, or migration obligations.
+**Resolution:** Treat compatibility as an explicit requirement, not a default. Identify consumers and contractual obligations before architecture begins. If compatibility is required, trace it through design, tests, and release planning. If it is not required, design the clean target state directly rather than preserving obsolete behavior as technical debt.
+
 **Review and quality failures**
 
-### 6. Rubber-Stamp Gate
+### 7. Rubber-Stamp Gate
 **Detection:** Phase transitions happen without documented review. Entry/exit criteria are not defined or routinely waived. Reviews consist of "looks good" without structured evaluation. The same person authors and approves the work.
 **Resolution:** Define explicit entry and exit criteria for each phase gate before the project begins. Conduct reviews with role segregation — the author cannot lead the review. Document findings and disposition. A gate that never rejects anything is not a gate.
 
-### 7. Informal Inspection
+### 8. Informal Inspection
 **Detection:** Review is a single approver clicking "approve." No designated roles (reader, reviewer, moderator). No defect log produced. Review comments are suggestions, never blocking findings. Average review time is under 5 minutes for substantial changes.
 **Resolution:** Scale formality to risk: full Fagan Inspection for high-risk components (security, financial, safety), structured review with documented findings for standard work. At minimum, every review must produce a written record of what was examined and what was found.
 
-### 8. Symptom-Only Defect Resolution
+### 9. Symptom-Only Defect Resolution
 **Detection:** A defect is closed by patching the observable failure without root-cause investigation. The fix is scoped to "make the test pass," "suppress the error," or "work around the edge case." The root cause is deferred as "out of scope," "too large," or "a separate task." The same failure class recurs in later iterations.
 **Resolution:** Every defect fix must begin with root-cause analysis. The scope of the correct fix is whatever the root cause requires: a targeted change, a refactor, a new feature, or an architectural revision. Scope constraints never justify a patch over the correct solution. A fix that does not address the cause has not resolved the defect — it has deferred it and obscured it.
 
+### 10. Proxy Acceptance Testing
+**Detection:** Acceptance, end-to-end, or review checks assert incidental text, markup, internal structure, or implementation details while leaving user-observable workflows, data flow, edge cases, or stated outcomes unverified.
+**Resolution:** Derive acceptance checks from requirements and intended outcomes. Verify meaningful workflows, externally visible behavior, and critical edge cases first. Assert presentation details only when they are explicit requirements.
+
 **Construction and delivery failures**
 
-### 9. Big Bang Integration
+### 11. Big Bang Integration
 **Detection:** All modules developed and unit-tested in isolation, then assembled at once near the end of the schedule. Integration defects discovered during system testing or acceptance testing. Interface contracts not verified incrementally.
 **Resolution:** Integrate incrementally. Test module interfaces as they connect, not after everything is assembled. Integration testing validates that individually correct components communicate correctly — this is a distinct verification concern that cannot be deferred.
 
-### 10. Deploy-and-Pray
+### 12. Deploy-and-Pray
 **Detection:** Release plan has no rollback procedure. Deployment strategy assumes success. No pre-deployment validation in a staging environment. CMDB update is not part of the release checklist. No Change Advisory Board review or equivalent governance.
 **Resolution:** Every release requires: a tested rollback procedure, pre-deployment validation (SVT), stakeholder authorization (CAB or equivalent), and post-deployment CMDB update. The deployment strategy must be chosen based on risk profile — canary, blue-green, or phased rollout. A release without a rollback plan is an irreversible bet.
 
@@ -92,6 +100,7 @@ Prescribe, assess, and coordinate software development lifecycle processes — f
 - Formal verification gates — entry/exit criteria between phases
 - Process scaling — adapting formality to context while preserving discipline
 - Artifact specification — what each phase must produce before the next begins
+- Artifact hygiene — removing obsolete files, tests, plans, interfaces, and comments from active sources of truth
 
 **Non-goals:**
 - Agent orchestration or multi-agent coordination (how agents work together)
@@ -131,9 +140,10 @@ When composed with orchestration disciplines, this skill provides the domain con
 2. **Scan for anti-patterns** from the watchlist above. Flag any detected anti-patterns with their name and resolution before proceeding.
 3. **Assess the formality tier** (see Scaling Guide below): Is this lightweight, standard, or formal context? Adjust ceremony expectations accordingly, but never compromise the scaling invariants.
 4. **Apply documentation discipline (Anti-Pattern #3):** All artifacts must describe current state as of now — supersede immediately, never append corrections or 'as of' notes. See [references/planning.md](references/planning.md) for the full documentation discipline protocol including the rolling documentation rules, working directory convention, and documentation manifest requirements.
-5. **IF single-phase task:** Load the matching reference file from the routing matrix and follow its procedures. Verify prior phase outputs are complete before starting the current phase.
-6. **IF cross-phase or oversight:** Use the phase overview matrix. Identify the current phase, verify all prior phase outputs are complete, diagnose gaps, and prescribe next steps with priority ordering.
-7. **Produce actionable output:** Every response must include specific artifact requirements, gate criteria, and recommended actions — not general advice.
+5. **Plan the whole slice:** For change work, plan implementation, tests, documentation, verification, compatibility decision, and cleanup together. Docs, tests, and obsolete artifact removal are part of the deliverable, not trailing chores.
+6. **IF single-phase task:** Load the matching reference file from the routing matrix and follow its procedures. Verify prior phase outputs are complete before starting the current phase.
+7. **IF cross-phase or oversight:** Use the phase overview matrix. Identify the current phase, verify all prior phase outputs are complete, diagnose gaps, and prescribe next steps with priority ordering. For broad quality work, review broad-to-narrow: system architecture, then domain/module boundaries, then local artifact quality.
+8. **Produce actionable output:** Every response must include specific artifact requirements, gate criteria, and recommended actions — not general advice.
 
 ## Scaling guide
 
@@ -157,8 +167,9 @@ The seven phases are invariant — every project moves through all of them. What
 4. **Documented architecture decisions** — The design document can be abbreviated, but key decisions cannot be skipped
 5. **Author-separate review** — The person who created the work cannot be the sole reviewer, at every scale
 6. **Root-cause defect resolution** — Defects are resolved at the cause, not the symptom. A patch that makes a test pass without addressing the underlying issue is not a resolution at any scale. When a defect is found, the correct fix is the one that eliminates the cause — regardless of the scope that requires.
-7. **Rollback capability** — Every deployment must have a defined reversion path, at every scale
-8. **Gate criteria** — Every phase transition must have defined completion criteria, at every scale
+7. **Whole-slice completion** — Implementation, test updates, documentation updates, compatibility decisions, verification, and cleanup must be planned as one deliverable
+8. **Rollback capability** — Every deployment must have a defined reversion path, at every scale
+9. **Gate criteria** — Every phase transition must have defined completion criteria, at every scale
 
 The phases scale in formality. The discipline is constant.
 
@@ -302,3 +313,5 @@ meaningfully validate requirement coverage.
 - What are the most common process failures in software development?
 - How do I ensure traceability from requirements through testing?
 - What security artifacts are needed during architecture?
+- How do I decide whether backward compatibility is required?
+- How do I keep active documentation free of obsolete history?

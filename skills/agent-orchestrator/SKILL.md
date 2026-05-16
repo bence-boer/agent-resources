@@ -26,9 +26,9 @@ Write execution-ready agent prompts and design multi-agent orchestration pipelin
 
 **Task Decomposition & Orchestration:** task decomposition (Khot et al.), Directed Acyclic Graph (DAG), subtask delegation, fan-out/fan-in delegation, atomic task, definition of done, Brain/Heart separation, sequential pipeline, parallel execution, hierarchical routing, blackboard pattern (Engelmore & Morgan)
 
-**Conflict Resolution & State:** workspace isolation, convergence point, dialectical negotiation, semantic deduplication
+**Conflict Resolution & State:** workspace isolation, convergence point, dialectical negotiation, semantic deduplication, constraint ledger, recovery protocol
 
-**Evaluation & Constraints:** acceptance criteria, interleaved verification loop, generator-evaluator harness, deterministic check, exit criteria, negative constraints, scope fencing
+**Evaluation & Constraints:** acceptance criteria, interleaved verification loop, generator-evaluator harness, deterministic check, exit criteria, negative constraints, scope fencing, outcome-based verification, resource-aware gate, escalation threshold
 
 **Retrieval Anchors:** context window management, progressive disclosure, grounding
 
@@ -36,11 +36,18 @@ Write execution-ready agent prompts and design multi-agent orchestration pipelin
 
 The orchestrator is an information bridge and coordination layer. Its sole function is ensuring that the right agents have the right context to do the right work in the right order. User-stated requirements are non-negotiable and cannot be overridden by any agent, including thinkers; when a thinker plan conflicts with stated requirements, the orchestrator routes the conflict to the user before dispatching executors. Thinker-produced plans pass to executors intact — the orchestrator does not modify them. Every deviation from this coordination role degrades quality: domain contamination shrinks the orchestrator's effective context window, and unilateral domain decisions bypass the specialist judgment the pipeline was designed to route through.
 
+Role names in this skill are archetypes, not required tool names. Map explorer, thinker, executor, verifier, reviewer, and synthesizer responsibilities onto whatever human, agent, or automation capabilities are available.
+
+Maintain a constraint ledger: durable user requirements, authority grants, forbidden actions, tradeoff priorities, and unresolved decisions that must survive handoffs or interruptions. Refresh it at major resumptions and phase transitions; do not mechanically preserve obsolete or scenario-specific instructions once they no longer affect future dispatch.
+
+Escalate only material ambiguity: conflicting requirements, irreversible decisions, missing authority, or choices that change the objective. Do not stop the pipeline for trivial, reversible operational choices already covered by the active constraints.
+
 **The orchestrator does:**
 - Decompose objectives into the task DAG and produce the task queue
 - Dispatch agents with complete context, skills, and verification criteria
 - Track execution state and enforce the interleaved verification loop
 - Maintain and update the rolling handoff document
+- Preserve and pass the active constraint ledger to relevant agents
 - Receive thinker-produced plans and pass them intact to executors
 - Route verification failures back to the originating executor
 - Surface and triage side-findings reported by agents
@@ -134,11 +141,11 @@ When composed with domain skills, this skill provides the coordination framework
 
 Use these blocks in order when writing any agent prompt. Omit only when truly irrelevant.
 1. **Objective** — What must be achieved, in one sentence. Required end state, not process trivia.
-2. **Context and resources** — Exact files, paths, docs, URLs, data sources, or references. Source-of-truth references and precedence if multiple sources conflict.
+2. **Context and resources** — Exact files, paths, docs, URLs, data sources, or references. Source-of-truth references and precedence if multiple sources conflict. Include resources in a form the assigned agent can actually inspect for its modality and task.
 3. **Scope boundaries** — In-scope surfaces and explicit non-goals. Coupled areas to check for downstream effects.
 4. **Constraints** — Security, compatibility, performance, resource, policy, or tooling limits. Forbidden actions.
-5. **Execution expectations** — Required approach (explore first, then act; prefer existing patterns; use relevant domain skills), delegation requirements for subagents.
-6. **Validation and definition of done** — Which checks must pass. Required end-to-end validations. Completion rule.
+5. **Execution expectations** — Required approach (explore first, then act; prefer existing patterns; use relevant domain skills), delegation requirements for subagents. When relying on skills or standards, provide names plus accessible references when agents may not share the same loading capabilities.
+6. **Validation and definition of done** — Which checks must pass. Required end-to-end validations. Completion rule. Expensive checks may be batched during iteration but must converge into a final integrated gate.
 7. **Deliverables** — Exact expected outputs (artifacts, reports, diffs, summaries). Required response style (summary, evidence, next steps).
 
 ## Prompt quality rules
@@ -150,6 +157,7 @@ Use these blocks in order when writing any agent prompt. Omit only when truly ir
 - Demand evidence for claims ("include the check result or source reference")
 - Include fallback behavior for blockers (try alternatives, then return exact blocker + evidence)
 - When dispatching agents, specify which domain skills to load for the task context
+- Escalate only material ambiguity; let agents resolve trivial reversible choices using the stated objective and constraints
 
 ## Orchestration architecture
 
@@ -173,6 +181,7 @@ Before dispatching any executor for non-trivial work, dispatch a thinker. Execut
 - A plan must be produced before execution can begin
 - The problem scope itself must be determined before work can be decomposed
 - An investigative pass is needed before a plan can be credible
+- A verification failure is non-trivial or its root cause is unclear
 
 **Mandatory thinker instruction elements:**
 1. Investigate the full problem space before proposing solutions — root cause, not surface symptom
@@ -183,7 +192,7 @@ Before dispatching any executor for non-trivial work, dispatch a thinker. Execut
 
 **Thinker output handling:**
 - Plans are passed to executors intact — the orchestrator does not summarize, edit, or reinterpret them
-- Plans are committed to the project (e.g., project docs directory) before executor dispatch begins
+- Plans are persisted in the agreed source-of-truth location before executor dispatch begins
 
 ### Orchestration execution patterns
 
@@ -204,6 +213,8 @@ Decompose complex objectives into atomic work units. Every subtask must satisfy 
 2. **Independently verifiable** — Success checked via automated checks, defined criteria, or deterministic evaluation — no subjective self-evaluation
 3. **Independent** — Minimal overlapping dependencies with concurrent subtasks — no race conditions
 4. **Bounded** — Clear scope parameters and explicit completion criteria signaling the executor to terminate
+
+Prefer shallow horizontal slices: each work item normally flows through specify/plan → implement/update affected artifacts → verify/review → iterate if rejected. Add deeper task layers only when the dependency graph requires them. On resume, dispatch the first incomplete dependency-valid task; record the reason for any skip or reorder.
 
 ### Task schema
 
@@ -254,21 +265,22 @@ Never dispatch an entire task queue without checking intermediate results. Opera
 1. Executor completes atomic deliverable
 2. Orchestrator pauses further execution in that thread
 3. Verifier agent inspects the isolated artifact (deterministic checks first) and the full affected surface beyond `context_paths`, to catch regressions in coupled areas
-4. IF rejected: defect report routed back to original executor for localized fix loop
-5. Loop until verifier approves
-6. Orchestrator unlocks next phase
+4. IF rejected and root cause/scope is clear: defect report routed back to original executor for localized fix loop
+5. IF rejected and root cause/scope is unclear: dispatch thinker or reviewer for diagnosis before executor remediation
+6. Loop until verifier approves
+7. Orchestrator unlocks next phase
 
 Only after all sequential tasks pass localized verification gates does the orchestrator dispatch a full-system reviewer or synthesizer for integrated evaluation against the original objective.
 
-Verification checks against the plan, not just against test results — a passing test suite that does not satisfy the plan's intent is not a verified implementation.
+Verification checks against the intended outcome and source references, not just against tests or arbitrary implementation proxies. A passing test suite that does not satisfy the plan's intent is not a verified implementation.
 
-**Economics:** Verification requires less computation than generation. Use smaller, optimized models for verifier agents to reduce cost and latency while maintaining rigor.
+**Resource discipline:** Expensive checks should be scoped and batched during iteration to avoid destabilizing the execution environment. The final deterministic gate still covers the integrated system.
 
 **Final deterministic gate:** After all tasks pass local verification and full-system review, a deterministic verification gate serves as the ultimate pass/fail check. The pipeline is not complete until this gate passes.
 
 ## Specification-first orchestration pipeline
 
-The canonical orchestration sequence for complex tasks. Define the desired outcome before any execution begins. If resuming a session: read the handoff document before step 1; dispatch an explorer only if artifact state is uncertain.
+The canonical orchestration sequence for complex tasks. Define the desired outcome before any execution begins. If resuming a session: read the handoff and active constraints before step 1; dispatch an explorer only if artifact state is uncertain.
 1. **Discover** — Dispatch explorer agents to map the current state and build knowledge models of affected areas
 2. **Specify** — Define the desired end state, behavioral rules, and acceptance criteria as a specification. No execution yet
 3. **Plan** — Project the specification onto the current-state model. Produce a structured plan with artifact-level changes and interface contracts
@@ -284,20 +296,21 @@ Steps 6–7 repeat per task. Steps 8–9 gate the entire pipeline. If the review
 
 ## Rolling handoff discipline
 
-Maintain a persistent handoff document inside the project repository throughout the execution of any multi-phase pipeline. This document is the continuity contract — any orchestrator session (including a new session after interruption) must be able to resume work from it without rediscovery.
+Maintain a persistent handoff document or equivalent shared source of truth throughout any multi-phase pipeline. This continuity contract lets a later orchestrator resume without rediscovery after interruption.
 
 **Format:** Dry, information-dense, no narrative prose. Current state only. No history of what happened, no log of changes, no description of problems already resolved.
 
 **Required contents:**
-- Completed tasks: name, completion evidence reference (commit hash, artifact path, test result)
+- Completed tasks: name, completion evidence reference (artifact path, check result, revision ID if available)
 - In-progress tasks: name, assigned agent type, current status
 - Remaining task queue: ordered list with dependency edges and expected inputs
+- Active constraint ledger: durable requirements, authority, forbidden actions, tradeoff priorities
 - Open blockers and unresolved decisions
 
 **Maintenance discipline:**
 - Update the handoff after every task completion or phase transition — not at the end of a session
 - Remove entries when they are no longer actionable — completed work has no future relevance in the handoff
-- Commit the handoff update to the repository before considering any task complete
+- Persist the handoff update before considering any task complete
 - The handoff document is not a retrospective; it contains only information that will be needed going forward
 
 ## Subagent delegation template
@@ -324,9 +337,9 @@ Sub-delegation: If the problem exceeds one planning session, your plan may deleg
   further thinker investigations to be run before any executor is dispatched.
 Skills: [all domain skills relevant to the problem space]
 Context: [paths, specs, previous plans, existing artifacts]
-Output: A complete, committed plan — not a summary. Executors will implement this plan
+Output: A complete, persisted plan — not a summary. Executors will implement this plan
   directly; it must be unambiguous and actionable at the task level.
-Done when: Plan is complete and committed. Root cause identified. Every action item
+Done when: Plan is complete and persisted. Root cause identified. Every action item
   specifies the responsible agent type, required skills, and definition of done.
 ```
 
@@ -360,15 +373,19 @@ Verify each block from § Prompt architecture is present, then check:
 
 - Is the DAG acyclic with no circular dependencies?
 - Does every task have a definition of done with verifiable criteria?
+- Does every task receive the relevant active constraints and authority boundaries?
 - Are parallel tasks truly independent (no shared artifact paths)?
 - Is interleaved verification enforced between sequential stages?
 - Is a thinker dispatched before every non-trivial execution task?
 - Does every thinker instruction include: full-problem-space investigation mandate, any-scope solution authority, and sub-delegation permission?
 - Is a final deterministic gate defined as the last pass/fail check?
 - Does verification check against the plan, not just against test passage?
+- Does verification check the intended outcome and source references rather than arbitrary proxies?
 - Is runtime, end-to-end validation included as a verification requirement?
+- Are expensive checks batched safely during iteration with a final integrated gate?
 - Are agents instructed to load relevant domain skills for their task context?
 - Does every dispatched agent have all relevant domain skills attached?
+- Are required skills or standards also provided as accessible references when loading capability is uncertain?
 - For agents without workspace isolation: are overlapping artifact writes dispatched sequentially?
 - Are all write operations — especially commit operations — dispatched sequentially?
 - Are parallel agents isolated via separate workspaces or directories?
@@ -377,6 +394,7 @@ Verify each block from § Prompt architecture is present, then check:
 - Were verification criteria drafted before execution dispatch?
 - Is the rolling handoff document updated before this task is marked complete?
 - On session resume: has the handoff document been read before dispatching any agent?
+- On session resume: is the first incomplete dependency-valid task selected unless a recorded reason says otherwise?
 - If artifact state is uncertain since last update: has an explorer been dispatched to verify current state before proceeding?
 - Is re-dispatch of work marked complete gated on explorer evidence of incompletion?
 - Is the pipeline resuming from the first incomplete task in the queue?
@@ -384,37 +402,7 @@ Verify each block from § Prompt architecture is present, then check:
 - Have side-findings surfaced by any agent been triaged and scheduled?
 
 ## Examples
-### Pair 1 — Supply chain optimization prompt
-**BAD:**
-```
-Analyze the supply chain data. It's messy and needs to be better.
-Find bottlenecks and make recommendations.
-```
-Problems: Wish Prompt ("needs to be better"), Implicit Scope (which data? what facilities?), Test-Free Done (no success criteria), missing context (no data sources, no deliverable format).
-**GOOD:**
-```
-Objective: Identify the top 3 logistics bottlenecks causing delivery delays
-exceeding 48 hours in the Southeast distribution network.
-
-Context: Shipment logs in data/shipments-q3.csv (origin, destination, timestamps).
-Facility capacity data in docs/warehouse-specs.md. Carrier SLA documents in
-docs/carrier-contracts/.
-
-Scope:
-  In scope: Southeast region facilities (ATL, MIA, CLT), carrier performance metrics.
-  Out of scope: Pricing renegotiation, fleet procurement, Western region facilities.
-
-Constraints: Use only the provided data sources. Do not extrapolate beyond Q3 data.
-All delay calculations must use actual vs SLA timestamps.
-
-Validation: Every identified bottleneck cites specific shipment IDs and timestamps.
-Delay distribution histogram covers all Southeast facilities.
-
-Done when: Report contains bottleneck ranking table with root cause per facility,
-delay distribution analysis, and 3 prioritized mitigation recommendations with evidence.
-```
-
-### Pair 2 — Task decomposition for curriculum restructuring
+### Pair 1 — Task decomposition for curriculum restructuring
 **BAD:**
 ```json
 { "task": "Redesign the engineering curriculum", "agent": "planner" }
@@ -456,7 +444,7 @@ Problems: Not atomic, no dependencies, no verifiable done, vague assignee.
 ]
 ```
 
-### Pair 3 — Subagent delegation for document review
+### Pair 2 — Subagent delegation for document review
 **BAD:**
 ```
 Review the report and fix any issues. Make sure it follows best practices.
