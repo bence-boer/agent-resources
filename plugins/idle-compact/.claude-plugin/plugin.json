@@ -1,0 +1,7 @@
+{
+  "name": "idle-compact",
+  "version": "0.2.0",
+  "description": "Compacts a session once it has sat idle for 20 minutes with more than 200k tokens of context",
+  "author": { "name": "Bence Boér" },
+  "types": "./types/index.d.ts"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "agent-resources",
+  "owner": { "name": "Bence Boér" },
+  "description": "Claude Code plugins from bence-boer/agent-resources",
+  "plugins": [
+    {
+      "name": "idle-compact",
+      "source": "./plugins/idle-compact",
+      "description": "Compacts a session once it has sat idle for 20 minutes with more than 200k tokens of context"
+    }
+  ]
+}
