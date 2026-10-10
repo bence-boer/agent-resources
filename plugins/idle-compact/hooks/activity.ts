@@ -5,6 +5,7 @@ import type { Activity } from '../types'
 export const POLICY = {
   idleMilliseconds: 20 * 60 * 1000,
   contextTokenThreshold: 200_000,
+  rateLimitPercentThreshold: 95,
   checkIntervalMilliseconds: 60 * 1000,
 } as const
 
@@ -15,6 +16,7 @@ export const INITIAL_ACTIVITY: Activity = { kind: 'unobserved' }
 export type Observation = {
   readonly now: number
   readonly contextTokens: number
+  readonly highestRateLimitPercentUsed: number
   readonly hasWorkingAgents: boolean
 }
 
@@ -26,8 +28,12 @@ export type ActivityEvent =
 
 export const isWorking = (agent: AgentInfo): boolean => WORKING_AGENT_STATUSES.has(agent.status)
 
-const isDueForCompaction = (idleSince: number, { now, contextTokens }: Observation): boolean =>
-  now - idleSince >= POLICY.idleMilliseconds && contextTokens > POLICY.contextTokenThreshold
+const isDueForCompaction = (
+  idleSince: number,
+  { now, contextTokens, highestRateLimitPercentUsed }: Observation,
+): boolean =>
+  contextTokens > POLICY.contextTokenThreshold &&
+  (now - idleSince >= POLICY.idleMilliseconds || highestRateLimitPercentUsed > POLICY.rateLimitPercentThreshold)
 
 const afterCheck = (activity: Activity, observation: Observation): Activity => {
   if (activity.kind !== 'idle') return activity

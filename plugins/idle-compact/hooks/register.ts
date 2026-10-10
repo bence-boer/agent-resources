@@ -11,7 +11,12 @@ const record = ($: EngineInterface, event: ActivityEvent) =>
 
 const observe = async ($: EngineInterface): Promise<Observation> => {
   const [now, usage, agents] = await Promise.all([$.clock.now(), $.session.usage(), $.agent.list()])
-  return { now, contextTokens: usage.context.tokens ?? 0, hasWorkingAgents: agents.some(isWorking) }
+  return {
+    now,
+    contextTokens: usage.context.tokens ?? 0,
+    highestRateLimitPercentUsed: Math.max(0, ...usage.rateLimits.map(window => window.percentUsed)),
+    hasWorkingAgents: agents.some(isWorking),
+  }
 }
 
 const compactWhenIdle = async ($: EngineInterface) => {

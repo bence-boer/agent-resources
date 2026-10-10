@@ -1,8 +1,9 @@
 # idle-compact
 
-Runs `/compact` in a Claude Code session once both hold:
+Runs `/compact` in a Claude Code session once all hold:
 
-- the main conversation has had no open turn for 20 minutes — a pending AskUserQuestion or permission prompt keeps the turn open, a background shell process does not, and a working background agent counts as activity;
+- the main conversation has no open turn — a pending AskUserQuestion or permission prompt keeps the turn open, a background shell process does not, and a working background agent counts as activity;
+- it has stayed that way for 20 minutes, or any rate-limit window (five-hour, seven-day) is above 95% used, in which case it compacts at the next one-minute check;
 - the context window holds more than 200k tokens.
 
 It compacts once per idle stretch; the next turn starts a new one. The thresholds are `POLICY` in [`hooks/activity.ts`](hooks/activity.ts).

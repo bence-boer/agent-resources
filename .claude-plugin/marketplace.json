@@ -6,7 +6,7 @@
     {
       "name": "idle-compact",
       "source": "./plugins/idle-compact",
-      "description": "Compacts a session once it has sat idle for 20 minutes with more than 200k tokens of context"
+      "description": "Compacts an idle session with more than 200k tokens of context after 20 minutes, or right away above 95% rate-limit usage"
     }
   ]
 }
