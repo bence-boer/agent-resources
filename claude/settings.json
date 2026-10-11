@@ -30,7 +30,8 @@
   "promptCacheTtl": "1h",
   "env": {
     "CLAUDE_CODE_PLUGIN_DIRS": "~/projects/agent-resources/plugins/idle-compact",
-    "CLAUDE_CODE_PLUGIN_DIR_WATCH": "1"
+    "CLAUDE_CODE_PLUGIN_DIR_WATCH": "1",
+    "CLAUDE_CODE_FORK_SUBAGENT": "1"
   },
   "enabledPlugins": {
     "idle-compact@agent-resources": true
