@@ -3,7 +3,7 @@
 Keeps a Claude Code session with more than 200k tokens of context from paying for its whole context uncached. Compaction and resumption happen while the main conversation's prompt cache is still warm. The cache lifetime comes from the `promptCacheTtl` setting: `5m`, or one hour otherwise.
 
 - **Idle**: when no turn is running, the session is compacted in the last stretch of the cache lifetime, 55 minutes after the main conversation's last model request on the one-hour cache.
-- **Long tool call**: while a turn waits on one tool call for that long, a one-word fork of the conversation (`$.model.fork`) reads the cache and keeps it alive instead. When a fork finds the cache already gone, pinging stops until the next model request.
+- **Long tool call**: while a turn waits on one tool call for that long, a one-word fork of the conversation (`$.model.fork`) reads the cache and keeps it alive instead. The fork leaves out the waiting model reply, whose tool call has no result yet, so only that reply is written to the cache again when the turn continues. When a fork finds the cache already gone, pinging stops until the next model request.
 - **Above 95% plan usage**: the main agent is told after its next batch of tool calls to wrap up, stop its background agents, write a handoff note and end its turn. The session is compacted as soon as the turn ends. A turn still running at 98% is stopped.
 - **At 100%**: compaction is impossible because it is a model request itself, so nothing is attempted.
 - **After the reset**: a turn that the plugin wound down, or that the limit ended, is continued a minute after the window resets. A turn the person interrupted is left alone.
