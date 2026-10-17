@@ -5,15 +5,7 @@
   "model": "opus[1m]",
   "statusLine": {
     "type": "command",
-    "command": "bash /home/scoy/.claude/statusline-command.sh"
-  },
-  "extraKnownMarketplaces": {
-    "agent-resources": {
-      "source": {
-        "source": "directory",
-        "path": "/home/scoy/projects/agent-resources"
-      }
-    }
+    "command": "bash ~/.claude/statusline-command.sh"
   },
   "effortLevel": "xhigh",
   "modelSettings": {
@@ -29,11 +21,8 @@
   "autoContinueAtUsageLimit": true,
   "promptCacheTtl": "1h",
   "env": {
-    "CLAUDE_CODE_PLUGIN_DIRS": "~/projects/agent-resources/plugins/idle-compact",
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.claude/agent-resources/plugins/idle-compact",
     "CLAUDE_CODE_PLUGIN_DIR_WATCH": "1",
     "CLAUDE_CODE_FORK_SUBAGENT": "1"
-  },
-  "enabledPlugins": {
-    "idle-compact@agent-resources": true
   }
 }
